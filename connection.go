@@ -19,7 +19,7 @@ func Connect() *gorm.DB {
                         os.Getenv("DB_SSLMODE"))
   db, err := gorm.Open("postgres", dbinfo)
   if err != nil {
- 		panic(err.Error())
- 	}
- 	return db
+    panic(err.Error())
+  }
+  return db
 }
