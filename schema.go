@@ -13,10 +13,11 @@ type User struct {
 
 type Mail struct {
   gorm.Model
-  From User `gorm:"association_foreignkey:FromRefer"`
-  FromRefer string
-  To User `gorm:"association_foreignkey:ToRefer"`
-  ToRefer string
+  From User `gorm:"foreignkey:FromRefer"`
+  FromRefer uint
+  To User `gorm:"foreignkey:ToRefer"`
+  ToRefer uint
+  Body string
 }
 
 func Migrate(db *gorm.DB) {
