@@ -25,10 +25,14 @@ func main() {
         Action:  func(c *cli.Context) error {
           currentUser := LogIn(c.String("username"), c.String("password"));
           if currentUser.Username != "" {
-            fmt.Printf("By: %v\n", currentUser.Username)
-            showMails(UserMails(currentUser, c.String("take")))
+            fmt.Printf("To: %v\n", currentUser.Username)
+            take := c.String("take")
+            if take == "" {
+              take = "-1"
+            }
+            showMails(UserMails(currentUser, take))
           } else {
-            fmt.Println("Incorrect username or password.")
+            fmt.Println("(!) Incorrect username or password.")
           }
           return nil
         },
@@ -60,16 +64,16 @@ func main() {
             if toUser.Username != "" {
               result, mail := SendMail(currentUser, toUser, c.String("body"))
               if result {
-                fmt.Println("Mail was sent.")
+                fmt.Println("(✓) Mail was sent.")
                 showMail(mail)
               } else {
-                fmt.Println("Error occur while sending mail.")
+                fmt.Println("(!) Error occur while sending mail.")
               }
             } else {
-              fmt.Printf("There is no user to send mail: %v.\n", toUser.Username)
+              fmt.Printf("(!) There is no user to send mail: %v.\n", toUser.Username)
             }
           } else {
-            fmt.Println("Incorrect username or password.")
+            fmt.Println("(!) Incorrect username or password.")
           }
           return nil
         },
@@ -102,10 +106,10 @@ func main() {
         Action: func(c *cli.Context) error {
           result, user := SingUp(c.String("username"), c.String("password"))
           if result {
-            fmt.Println("User was created.")
+            fmt.Println("(✓) User was created.")
             showUser(user)
           } else {
-            fmt.Println("Error occur while creating user.")
+            fmt.Println("(!) Error occur while creating user.")
           }
           return nil
         },
@@ -137,9 +141,9 @@ func showUser(user User) {
 }
 
 func showMail(mail Mail) {
-  to := User{}
-  db.Model(&mail).Association("To").Find(&to)
-  fmt.Printf("\tTo: %v,\n\tDate: %v,\n\tBody: %v\n", to.Username, mail.CreatedAt, mail.Body)
+  from := User{}
+  db.Model(&mail).Association("From").Find(&from)
+  fmt.Printf("\tFrom: %v,\n\tDate: %v,\n\tBody: %v\n", from.Username, mail.CreatedAt, mail.Body)
 }
 
 func showMails(mails []Mail) {
