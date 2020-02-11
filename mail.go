@@ -1,12 +1,9 @@
 package main
 
-func LogIn(username string, password string) bool {
+func LogIn(username string, password string) User {
   user := User {}
   db.Where("username = ? AND password = ?", username, password).First(&user)
-  if user.Username == "" {
-    return false
-  }
-  return true
+  return user
 }
 
 func SingUp(username string, password string) bool {
@@ -18,18 +15,18 @@ func SingUp(username string, password string) bool {
   return !db.NewRecord(user)
 }
 
-func SendMail(from User, to User, body string) bool {
+func SendMail(from User, to User, body string) (bool, Mail) {
   mail := Mail {
     From: from,
     To: to,
     Body: body,
   }
   db.Create(&mail)
-  return !db.NewRecord(mail)
+  return !db.NewRecord(mail), mail
 }
 
-func UserMails(user User) []Mail {
+func UserMails(user User, take string) []Mail {
   mails := []Mail{}
-  db.Model(&user).Association("Mails").Find(&mails)
+  db.Order("created_at desc").Limit(take).Model(&user).Association("Mails").Find(&mails)
   return mails
 }
