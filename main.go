@@ -21,7 +21,6 @@ func main() {
     Commands: []*cli.Command{
       {
         Name:    "mails",
-        Aliases: []string{"m"},
         Usage:   "Show all mails that is sent by the user.",
         Action:  func(c *cli.Context) error {
           currentUser := LogIn(c.String("username"), c.String("password"));
@@ -52,7 +51,6 @@ func main() {
       },
       {
         Name:    "send-mail",
-        Aliases: []string{"s"},
         Usage:   "Send mail to the user.",
         Action:  func(c *cli.Context) error {
           currentUser := LogIn(c.String("username"), c.String("password"));
@@ -98,6 +96,32 @@ func main() {
           },
         },
       },
+      {
+        Name: "sign-up",
+        Usage: "Sign up to use the mail mail service.",
+        Action: func(c *cli.Context) error {
+          result, user := SingUp(c.String("username"), c.String("password"))
+          if result {
+            fmt.Println("User was created.")
+            showUser(user)
+          } else {
+            fmt.Println("Error occur while creating user.")
+          }
+          return nil
+        },
+        Flags: []cli.Flag{
+          &cli.StringFlag{
+            Name:  "username, u",
+            Usage: "Your username to use mail service.",
+            Required: true,
+          },
+          &cli.StringFlag{
+            Name:  "password, p",
+            Usage: "Your password to use mail service.",
+            Required: true,
+          },
+        },
+      },
     },
   }
 
@@ -105,6 +129,11 @@ func main() {
   if err != nil {
     log.Fatal(err)
   }
+}
+
+func showUser(user User) {
+  db.First(&user)
+  fmt.Printf("\tUsername: %v,\n\tPassword: %v,\n", user.Username, user.Password)
 }
 
 func showMail(mail Mail) {

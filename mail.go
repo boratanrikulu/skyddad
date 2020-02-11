@@ -6,13 +6,13 @@ func LogIn(username string, password string) User {
   return user
 }
 
-func SingUp(username string, password string) bool {
+func SingUp(username string, password string) (bool, User) {
   user := User{
     Username: username,
     Password: password,
   }
   db.Create(&user)
-  return !db.NewRecord(user)
+  return !db.NewRecord(user), user
 }
 
 func SendMail(from User, to User, body string) (bool, Mail) {
