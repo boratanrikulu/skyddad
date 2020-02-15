@@ -3,13 +3,25 @@ package main
 import (
   "fmt"
   "os"
+  "log"
 
   "github.com/jinzhu/gorm"
+  "github.com/joho/godotenv"
   _ "github.com/jinzhu/gorm/dialects/postgres"
-  _ "github.com/joho/godotenv/autoload"
 )
 
+func loadEnv() {
+  err := godotenv.Load()
+  if err != nil {
+    err = godotenv.Load(os.Getenv("HOME") + "/.config/skyddad/.env")
+    if err != nil {
+      log.Fatal("Error loading .env file")
+    }
+  }
+}
+
 func Connect() *gorm.DB {
+  loadEnv()
   dbinfo := fmt.Sprintf("host=%v port=%v user=%v password=%v, dbname=%v sslmode=%v",
                         os.Getenv("DB_HOST"),
                         os.Getenv("DB_PORT"),
