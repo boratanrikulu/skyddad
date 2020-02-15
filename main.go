@@ -17,11 +17,11 @@ func main() {
 
   app := &cli.App{
     Name: "Skyddad",
-    Usage: "A mail client that keep you safe.",
+    Usage: "A mail client that keeps you safe.",
     Commands: []*cli.Command{
       {
         Name:    "mails",
-        Usage:   "Show all mails that is sent by the user.",
+        Usage:   "Show all mails that were sent by the user.",
         Action:  func(c *cli.Context) error {
           currentUser := LogIn(c.String("username"), c.String("password"));
           if currentUser.Username != "" {
@@ -102,7 +102,7 @@ func main() {
       },
       {
         Name: "sign-up",
-        Usage: "Sign up to use the mail mail service.",
+        Usage: "Sign up to the mail service.",
         Action: func(c *cli.Context) error {
           result, user := SingUp(c.String("username"), c.String("password"))
           if result {
