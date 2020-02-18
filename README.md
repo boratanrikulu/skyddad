@@ -46,6 +46,10 @@ GLOBAL OPTIONS:
    --help, -h  show help (default: false)
 ```
 
+## Testing
+
+![testing](example.png)
+
 ## To-Do
 
 - [ ] Add end-to-end encryption between users.
