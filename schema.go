@@ -17,6 +17,8 @@ type Mail struct {
   FromRefer uint `gorm:"not null"`
   To User `gorm:"foreignkey:ToRefer"`
   ToRefer uint `gorm:"not null"`
+  SymmetricKey SymmetricKey `gorm:"foreignkey:SymmetricKeyRefer"`
+  SymmetricKeyRefer uint
   Body string `gorm:"not null"`
   IsEncrypted bool `gorm:"not null;default:false"`
 }
