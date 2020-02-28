@@ -65,6 +65,7 @@ func main() {
               result, mail := SendMail(currentUser, toUser, c.String("body"))
               if result {
                 fmt.Println("(✓) Mail was sent.")
+                setEncryptionInfo(&mail, "[ Encrypted ] ")
                 showMail(mail)
               } else {
                 fmt.Println("(!) Error occur while sending mail.")
@@ -135,6 +136,17 @@ func main() {
   }
 }
 
+func setEncryptionInfo(mail   *Mail, info string) {
+  body := ""
+  if mail.IsEncrypted == true {
+    body += info
+  } else {
+    body += "[ Plain Text ] "
+  }
+  body += mail.Body
+  mail.Body = body
+}
+
 func showUser(user User) {
   db.First(&user)
   fmt.Printf("\tUsername: %v,\n\tPassword: %v,\n", user.Username, user.Password)
@@ -143,14 +155,7 @@ func showUser(user User) {
 func showMail(mail Mail) {
   from := User{}
   db.Model(&mail).Association("From").Find(&from)
-  body := ""
-  if mail.IsEncrypted == true {
-    body += "[ Encrypted Text ] "
-  } else {
-    body += "[ Plain Text ] "
-  }
-  body += mail.Body
-  fmt.Printf("\tFrom: %v,\n\tDate: %v,\n\tBody: %v\n", from.Username, mail.CreatedAt, body)
+  fmt.Printf("\tFrom: %v,\n\tDate: %v,\n\tBody: %v\n", from.Username, mail.CreatedAt, mail.Body)
 }
 
 func showMails(mails []Mail) {
@@ -158,6 +163,7 @@ func showMails(mails []Mail) {
     if i != 0 {
       fmt.Printf("\t----------\n")
     }
+    setEncryptionInfo(&mail, "[ Decrypted ] ")
     showMail(mail)
   }
 }
