@@ -52,4 +52,5 @@ GLOBAL OPTIONS:
 
 ## To-Do
 
-- [ ] Add end-to-end encryption between users.
+- [x] Add end-to-end encryption between users.  
+- [ ] Add encryption for user passwords.
