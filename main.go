@@ -30,7 +30,7 @@ func main() {
             if take == "" {
               take = "-1"
             }
-            showMails(UserMails(currentUser, take))
+            showMails(Mails(currentUser, take))
           } else {
             fmt.Println("(!) Incorrect username or password.")
           }
@@ -143,7 +143,14 @@ func showUser(user User) {
 func showMail(mail Mail) {
   from := User{}
   db.Model(&mail).Association("From").Find(&from)
-  fmt.Printf("\tFrom: %v,\n\tDate: %v,\n\tBody: %v\n", from.Username, mail.CreatedAt, mail.Body)
+  body := ""
+  if mail.IsEncrypted == true {
+    body += "[ Encrypted Text ] "
+  } else {
+    body += "[ Plain Text ] "
+  }
+  body += mail.Body
+  fmt.Printf("\tFrom: %v,\n\tDate: %v,\n\tBody: %v\n", from.Username, mail.CreatedAt, body)
 }
 
 func showMails(mails []Mail) {
