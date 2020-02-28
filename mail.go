@@ -76,8 +76,9 @@ func decryptMails(mails []Mail) []Mail {
         Find(&symmetricKey)
         mail.Body = decrypt(mail.Body, symmetricKey.Key)
         decryptedMails = append(decryptedMails, mail)
+    } else {
+      decryptedMails = append(decryptedMails, mail)
     }
-    decryptedMails = append(decryptedMails, mail)
   }
   return decryptedMails
 }
