@@ -50,7 +50,7 @@ GLOBAL OPTIONS:
 
 ## Testing
 
-#### Creating users.
+### Creating users.
 ```bash
 skyddad sign-up --username "testing-user-1" --password "user-1-pass"
 ```
@@ -62,7 +62,7 @@ skyddad sign-up --username "testing-user-1" --password "user-1-pass"
 	Password: user-1-pass,
 ```
 
-#### Sending mails.
+### Sending mails.
 ```bash
 skyddad send-mail --username "testing-user-1" --password "user-1-pass" \
                   --to-user "testing-user-2" \
@@ -79,7 +79,7 @@ skyddad send-mail --username "testing-user-1" --password "user-1-pass" \
 	Body: [ Encrypted ] 7e332fd3b2f52103da2b45f50271d290885fabb747947643b66dcca0212c79d5dc113b
 ```
 
-#### Sending mail by using custom key.
+### Sending mail by using custom key.
 ```bash
 skyddad send-mail --username "testing-user-1" --password "user-1-pass" \
                   --to-user "testing-user-2" \
@@ -97,7 +97,7 @@ skyddad send-mail --username "testing-user-1" --password "user-1-pass" \
 	Body: [ Encrypted ] 0ef9f4a3a82446e445bf8c3e687d30b7b9cb5afa55c0c34a6b789787d4587159455ff3892b64cf5339d35cc24bb4ee8c34fd129b0f4801eae1ac33
 ```
 
-#### Showing e-mails.
+### Showing e-mails.
 ```bash
 skyddad mails --username "testing-user-2" --password "user-2-pass"
 ```
