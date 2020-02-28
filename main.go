@@ -62,7 +62,7 @@ func main() {
           db.Where("username = ?", c.String("to-user")).First(&toUser)
           if currentUser.Username != "" {
             if toUser.Username != "" {
-              result, mail := SendMail(currentUser, toUser, c.String("body"))
+              result, mail := SendMail(currentUser, toUser, c.String("body"), c.String("key"))
               if result {
                 fmt.Println("(✓) Mail was sent.")
                 setEncryptionInfo(&mail, "[ Encrypted ] ")
@@ -98,6 +98,11 @@ func main() {
             Name: "body, b",
             Usage: "Body for the mail.",
             Required: true,
+          },
+          &cli.StringFlag{
+            Name: "key, k",
+            Usage: "Custom key to encrypt mail. Automatically create key if you do not set custom key.",
+            Required: false,
           },
         },
       },
