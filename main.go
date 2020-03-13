@@ -36,9 +36,9 @@ func main() {
             for _, mail := range mails {
               fmt.Printf("\t----------\n")
               if isChanged(mail.Body, mail.Hash) {
-                fmt.Println("\t(!) Message is changed. Mail body's hash and hash values are not equal.")
+                fmt.Println("\t(!) Message is changed.")
               } else {
-                fmt.Println("\t(✓) Message is not changed. Mail body's hash and hash values are equal.")
+                fmt.Println("\t(✓) Message is not changed.")
               }
               setEncryptionInfo(&mail, "[ Decrypted ] ")
               showMail(mail)
@@ -172,6 +172,7 @@ func main() {
                   setEncryptionInfo(&mail, "[ Encrypted ] ")
                   fmt.Printf("\t----------\n")
                   showMail(mail)
+                  fmt.Printf("\tBody Text: %v\n", body)
                   } else {
                     fmt.Println("(!) Error occur while sending mail.")
                   }
