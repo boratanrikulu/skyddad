@@ -117,5 +117,6 @@ To: testing-user-2
 ## To-Do
 
 - [x] Add end-to-end encryption between users.  
-- [x] Add custom key usage. (--key)  
+- [x] Add custom key feature. (--key)  
+- [x] Add spam attack feature. (--spam-attack)  
 - [ ] Add encryption for user passwords.
