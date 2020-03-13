@@ -121,3 +121,13 @@ func randomMails() string {
 
 	return spamMail
 }
+
+func isChanged(body string, hash string) bool {
+	bodyHash := sha256.New()
+	bodyHash.Write([]byte(body))
+
+	if hex.EncodeToString(bodyHash.Sum(nil)) == hash {
+		return false
+	}
+	return true
+}

@@ -35,11 +35,16 @@ func main() {
             mails := Mails(currentUser, take)
             for _, mail := range mails {
               fmt.Printf("\t----------\n")
+              if isChanged(mail.Body, mail.Hash) {
+                fmt.Println("\t(!) Message is changed. Mail body's hash and hash values are not equal.")
+              } else {
+                fmt.Println("\t(✓) Message is not changed. Mail body's hash and hash values are equal.")
+              }
               setEncryptionInfo(&mail, "[ Decrypted ] ")
               showMail(mail)
             }
             fmt.Printf("------------------\n")
-            fmt.Printf("\"%v\" mails are listed for \"%v\" user.\n", len(mails), c.String("username"))
+            fmt.Printf("(✓) \"%v\" mails are listed for \"%v\" user.\n", len(mails), c.String("username"))
           } else {
             fmt.Println("(!) Incorrect username or password.")
           }
@@ -218,7 +223,7 @@ func main() {
   }
 }
 
-func setEncryptionInfo(mail   *Mail, info string) {
+func setEncryptionInfo(mail *Mail, info string) {
   body := ""
   if mail.IsEncrypted == true {
     body += info
