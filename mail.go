@@ -1,12 +1,12 @@
 package main
 
 import (
-	"fmt"
-	"strings"
-	"math/rand"
-	"time"
-	"crypto/sha256"
-	"encoding/hex"
+  "fmt"
+  "strings"
+  "math/rand"
+  "time"
+  "crypto/sha256"
+  "encoding/hex"
 )
 
 func LogIn(username string, password string) User {
@@ -29,13 +29,13 @@ func SendMail(from User, to User, body string, keyFromUser string) (bool, Mail) 
     symmetricKey := SymmetricKey{}
     setSymmetricKey(&symmetricKey, keyFromUser, from, to)
 
-		hash := sha256.New()
-		hash.Write([]byte(body))
+    hash := sha256.New()
+    hash.Write([]byte(body))
 
     mail := Mail {
       From: from,
       To: to,
-			Hash: hex.EncodeToString(hash.Sum(nil)),
+      Hash: hex.EncodeToString(hash.Sum(nil)),
     }
 
     if symmetricKey.Key != ""  {
@@ -110,24 +110,24 @@ func decryptMails(mails []Mail) []Mail {
 }
 
 func randomMails() string {
-	text := "Consider yourself a task I have ended. Our relationship, a 404 not found. Our connection now disconnected. You, a broken link I wish I had been forbidden to visit, a threat I did not initially detect. You became a virus in my system, and I had to Malware you out of it. I have now completed the uninstallation process, have reset my life’s device back to its original settings from before five years ago when I mistakenly trusted your download of lies. So good luck spamming your way into someone else’s unregistered trust—I have already reported your corrupted files."
-	words := strings.Split(text, " ")
+  text := "Consider yourself a task I have ended. Our relationship, a 404 not found. Our connection now disconnected. You, a broken link I wish I had been forbidden to visit, a threat I did not initially detect. You became a virus in my system, and I had to Malware you out of it. I have now completed the uninstallation process, have reset my life’s device back to its original settings from before five years ago when I mistakenly trusted your download of lies. So good luck spamming your way into someone else’s unregistered trust—I have already reported your corrupted files."
+  words := strings.Split(text, " ")
 
-	spamMail := ""
-	rand.Seed(time.Now().UnixNano())
-	for i := 0; i < 20; i++ {
-		spamMail +=	string(words[rand.Intn(len(words))]) + " "
-	}
+  spamMail := ""
+  rand.Seed(time.Now().UnixNano())
+  for i := 0; i < 20; i++ {
+    spamMail +=  string(words[rand.Intn(len(words))]) + " "
+  }
 
-	return spamMail
+  return spamMail
 }
 
 func isChanged(body string, hash string) bool {
-	bodyHash := sha256.New()
-	bodyHash.Write([]byte(body))
+  bodyHash := sha256.New()
+  bodyHash.Write([]byte(body))
 
-	if hex.EncodeToString(bodyHash.Sum(nil)) == hash {
-		return false
-	}
-	return true
+  if hex.EncodeToString(bodyHash.Sum(nil)) == hash {
+    return false
+  }
+  return true
 }
