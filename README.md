@@ -8,7 +8,7 @@ This program was written for Cryptology lesson that's given at Pamukkale Univers
 
 - All mails are encrypted by using [**Stream Cipher Algorithm (CFB)**](https://golang.org/pkg/crypto/cipher/#Stream).  
 - You can simply see if mails are changed. Mail hashes are calculated by using SHA-256 algorithm [**crypto/sha256**](https://golang.org/pkg/crypto/sha256).
-- Mails are signed by using [**ED25519 Algorithm**](https://golang.org/pkg/crypto/ed25519/). That is an automatic oparetion. When you signup to system private and public keys are created. When you send a mail, the mail will be signed by using your private key. Users checks received emails signatures by checking from-user's public key.
+- Mails are signed by using [**ED25519 Algorithm**](https://golang.org/pkg/crypto/ed25519/). That is an automatic operation. When you signup to system, private and public keys are created. When you send a mail, the mail will be signed by using your private key. Users checks received email's signatures by checking from-user's public key.
 
 ## Installation
 
