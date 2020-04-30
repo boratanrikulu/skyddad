@@ -1,12 +1,12 @@
 package main
 
 import (
-  "testing"
+	"testing"
 )
 
 func TestConnect(t *testing.T) {
-  got := Connect()
-  if got == nil {
-    t.Errorf("Error.")
-  }
+	got := Connect()
+	if got == nil {
+		t.Errorf("Error.")
+	}
 }
