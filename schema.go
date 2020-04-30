@@ -6,9 +6,11 @@ import (
 
 type User struct {
 	gorm.Model
-	Username string `gorm:"unique;unique_index;not null"`
-	Password string `gorm:"not null"`
-	Mails    []Mail `gorm:"foreignkey:ToRefer;association_foreignkey:ID"`
+	Username   string `gorm:"unique;unique_index;not null"`
+	Password   string `gorm:"not null"`
+	Mails      []Mail `gorm:"foreignkey:ToRefer;association_foreignkey:ID"`
+	PublicKey  []byte
+	PrivateKey []byte
 }
 
 type Mail struct {
@@ -22,8 +24,8 @@ type Mail struct {
 	Body              string `gorm:"not null"`
 	Hash              string
 	IsEncrypted       bool `gorm:"not null;default:false"`
+	Signature         []byte
 }
-
 type SymmetricKey struct {
 	gorm.Model
 	Sender          User   `gorm:"foreignkey:SenderRefer;"`
