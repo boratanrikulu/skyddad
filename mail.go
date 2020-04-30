@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/ed25519"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
@@ -9,21 +10,37 @@ import (
 	"time"
 )
 
+// LogIn takes username and password.
+// It returns user that match If there is.
 func LogIn(username string, password string) User {
 	user := User{}
 	db.Where("username = ? AND password = ?", username, password).First(&user)
 	return user
 }
 
+// SingUp creates user if there is not already.
 func SingUp(username string, password string) (bool, User) {
-	user := User{
-		Username: username,
-		Password: password,
+	publicKey, privateKey, err := ed25519.GenerateKey(nil)
+	if err != nil {
+		return false, User{}
 	}
+
+	user := User{
+		Username:   username,
+		Password:   password,
+		PrivateKey: privateKey,
+		PublicKey:  publicKey,
+	}
+
 	db.Create(&user)
 	return !db.NewRecord(user), user
 }
 
+// SendMail sends mails from-user to to-user.
+// It also supports signature.
+//
+// If mail is sent, method will return true and mail that is sent.
+// If could not sent, method will return false and nil.
 func SendMail(from User, to User, body string, keyFromUser string) (bool, Mail) {
 	if len(keyFromUser) == 0 || len(keyFromUser) == 32 || len(keyFromUser) == 64 {
 		symmetricKey := SymmetricKey{}
@@ -47,6 +64,12 @@ func SendMail(from User, to User, body string, keyFromUser string) (bool, Mail) 
 		}
 		mail.Body = body
 
+		if len(from.PrivateKey) != 0 {
+			// If user sent it's private key
+			// that means user wants to sign it's mail.
+			setSignature(&mail, &from)
+		}
+
 		db.Create(&mail)
 		return !db.NewRecord(mail), mail
 	} else {
@@ -54,6 +77,8 @@ func SendMail(from User, to User, body string, keyFromUser string) (bool, Mail) 
 	}
 }
 
+// Users can see their mails.
+// It also support 'take' option to limit messages.
 func Mails(user User, take string) []Mail {
 	encryptedMails := []Mail{}
 	db.Order("created_at desc").
@@ -64,6 +89,46 @@ func Mails(user User, take string) []Mail {
 
 	decryptedMails := decryptMails(encryptedMails)
 	return decryptedMails
+}
+
+func SetMailUser(mail *Mail) {
+	db.Model(mail).
+		Association("From").
+		Find(&mail.From)
+
+	db.Model(mail).
+		Association("To").
+		Find(&mail.To)
+}
+
+// IsChanged checks if mail is changed.
+func IsChanged(body string, hash string) bool {
+	bodyHash := sha256.New()
+	bodyHash.Write([]byte(body))
+
+	if hex.EncodeToString(bodyHash.Sum(nil)) == hash {
+		return false
+	}
+
+	// or
+
+	return true
+}
+
+// IsSignatureReal checks if mail is signed by the right user..
+func IsSignatureReal(publicKey ed25519.PublicKey, hash []byte, signature []byte) bool {
+	return ed25519.Verify(publicKey, hash, signature)
+}
+
+// Private Methods
+
+func setSignature(mail *Mail, from *User) {
+	// User's private key to sign mail.
+	privateKey := from.PrivateKey
+
+	// Sign the mail with user's private key
+	// and set it as signature.
+	mail.Signature = ed25519.Sign(privateKey, []byte(mail.Hash))
 }
 
 func setSymmetricKey(symmetricKey *SymmetricKey, keyFromUser string, from User, to User) {
@@ -120,14 +185,4 @@ func randomMails() string {
 	}
 
 	return spamMail
-}
-
-func isChanged(body string, hash string) bool {
-	bodyHash := sha256.New()
-	bodyHash.Write([]byte(body))
-
-	if hex.EncodeToString(bodyHash.Sum(nil)) == hash {
-		return false
-	}
-	return true
 }
