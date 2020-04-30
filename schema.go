@@ -21,7 +21,14 @@ type Mail struct {
 	SymmetricKeyRefer uint
 	Body              string `gorm:"not null"`
 	Hash              string
-	IsEncrypted       bool `gorm:"not null;default:false"`
+	IsEncrypted       bool      `gorm:"not null;default:false"`
+	Signature         Signature `gorm:"foreignkey:SignatureRefer"`
+	SignatureRefer    uint
+}
+
+type Signature struct {
+	Value     string
+	PublicKey string
 }
 
 type SymmetricKey struct {
@@ -35,5 +42,5 @@ type SymmetricKey struct {
 }
 
 func Migrate(db *gorm.DB) {
-	db.AutoMigrate(&User{}, &Mail{}, &SymmetricKey{})
+	db.AutoMigrate(&User{}, &Mail{}, &Signature{}, &SymmetricKey{})
 }
