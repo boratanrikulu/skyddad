@@ -8,6 +8,7 @@ This program was written for Cryptology lesson that's given at Pamukkale Univers
 
 - All mails are encrypted by using [**Stream Cipher Algorithm (CFB)**](https://golang.org/pkg/crypto/cipher/#Stream).  
 - You can simply see if mails are changed. Mail hashes are calculated by using SHA-256 algorithm [**crypto/sha256**](https://golang.org/pkg/crypto/sha256).
+- Mails are signed by using [**ED25519 Algorithm**](https://golang.org/pkg/crypto/ed25519/). That is an automatic oparetion. When you signup to system private and public keys are created. When you send a mail, the mail will be signed by using your private key. Users checks received emails signatures by checking from-user's public key.
 
 ## Installation
 
@@ -36,16 +37,17 @@ There is a env sample: [**here**](/env.sample).
 
 ```
 NAME:
-   Skyddad - A mail client that keep you safe.
+   Skyddad - A mail client that keeps you safe.
 
 USAGE:
    skyddad [global options] command [command options] [arguments...]
 
 COMMANDS:
-   mails      Show all mails that is sent by the user.
-   send-mail  Send mail to the user.
-   sign-up    Sign up to use the mail mail service.
-   help, h    Shows a list of commands or help for one command
+   mails        Show all mails that were sent by the user.
+   send-mail    Send mail to the user.
+   sign-up      Sign up to the mail service.
+   spam-attack  Attack to the user with spam mails.
+   help, h      Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
    --help, -h  show help (default: false)
@@ -58,12 +60,14 @@ GLOBAL OPTIONS:
 skyddad sign-up --username "testing-user-1" --password "user-1-pass"
 ```
 
-**Excepted result.**
+#### Excepted result.
 ```
 (✓) User was created.
   Username: testing-user-1,
   Password: user-1-pass,
 ```
+
+---
 
 #### Sending mails.
 ```bash
@@ -72,7 +76,7 @@ skyddad send-mail --username "testing-user-1" --password "user-1-pass" \
                   --body "Top secret message."
 ```
 
-**Excepted result.**
+#### Excepted result.
 > Body section would be different.  
 
 ```
@@ -81,64 +85,39 @@ skyddad send-mail --username "testing-user-1" --password "user-1-pass" \
 	----------
 	From: testing-user-1,
 	To: testing-user-2
-	Date: 2020-03-13 17:12:15.378794251 +0300 +03 m=+0.121973922,
+	Date: 2020-04-30 19:34:34.435383788 +0300 +03 m=+0.120306794,
 	Hash: f1b8a5f9377b8b77a21eb61234383d5c071aca09cdd20bacbd88dafeef6bf3a4
-	Body: [ Encrypted ] 5551f78abe3b48328930b2ab8b99fcab1e0907e2bae90552b73ddd0b5dee6680eb2d8f
+	Signature: 4b1a105d60dfd23d56f80a0fa298452458e20b1ad3f75b77a6dd6d81f67a44057fce4c8ca8aa6b10af5381aa64297d5190f8ec480dc39b480587751f8617300f
+	Body: [ Encrypted ] 5795eb9b062d86a1482aa6c378f5ef1c99e26d98fba30aea99e45ab8fda34ba93c8ca1
 ------------------
 (✓) A mail was sent to "testing-user-1" from "testing-user-2".
 ```
 
-#### Sending mail by using custom key.
-```bash
-skyddad send-mail --username "testing-user-1" --password "user-1-pass" \
-                  --to-user "testing-user-2" \
-                  --body "Top secret message by using custom message." \
-                  --key "11011001100010101100101001010101"
-```
-
-**Excepted result.**
-> Body section would be different.  
-
-```
-------------------
-(✓) Mail was sent.
-	----------
-	From: testing-user-1,
-	To: testing-user-2
-	Date: 2020-03-13 17:12:30.962514735 +0300 +03 m=+0.121759609,
-	Hash: 222797e57a004862a373f407b0f74509410b9e141faae0ce80232c9a08c199ca
-	Body: [ Encrypted ] b7e32c6a8adf5d633884c6f678b12e13e9176f1d3e28a3e159902cdbdc7c6df1ca98793741ef630a8e6c0c499df88d5329b8492fa0e6652edaf585
-------------------
-(✓) A mail was sent to "testing-user-1" from "testing-user-2".
-
-```
+---
 
 #### Showing e-mails.
 ```bash
 skyddad mails --username "testing-user-2" --password "user-2-pass"
 ```
 
-**Excepted result.**
+#### Excepted result.
 ```
 ------------------
 To: testing-user-2
 	----------
-	(✓) Message is not changed.
+	(✓) Message is not changed. Hash is same.
+	(✓) Message is signed by testing-user-1. That's an real signature.
 	From: testing-user-1,
 	To: testing-user-2
-	Date: 2020-03-13 17:12:30.962515 +0300 +03,
-	Hash: 222797e57a004862a373f407b0f74509410b9e141faae0ce80232c9a08c199ca
-	Body: [ Decrypted ] Top secret message by using custom message.
-	----------
-	(✓) Message is not changed.
-	From: testing-user-1,
-	To: testing-user-2
-	Date: 2020-03-13 17:12:15.378794 +0300 +03,
+	Date: 2020-04-30 19:34:34.435384 +0300 +03,
 	Hash: f1b8a5f9377b8b77a21eb61234383d5c071aca09cdd20bacbd88dafeef6bf3a4
+	Signature: 4b1a105d60dfd23d56f80a0fa298452458e20b1ad3f75b77a6dd6d81f67a44057fce4c8ca8aa6b10af5381aa64297d5190f8ec480dc39b480587751f8617300f
 	Body: [ Decrypted ] Top secret message.
 ------------------
-(✓) "2" mails are listed for "testing-user-2" user.
+(✓) "1" mails are listed for "testing-user-2" user.
 ```
+
+---
 
 #### Spam attack to the user.
 ```bash
@@ -147,53 +126,58 @@ skyddad spam-attack --username "testing-user-1" --password "user-1-pass" \
                     --number-of-mails "5"
 ```
 
-**Excepted result.**
+#### Excepted result.
 ```
 ------------------
 (✓) Mail was sent.
 	----------
 	From: testing-user-1,
 	To: testing-user-2
-	Date: 2020-03-13 17:22:46.303585394 +0300 +03 m=+0.125548346,
-	Hash: 01bd1caf93137d3d3cb62dc6fdfcbbf807e275619c47ce6e18215b5982c67088
-	Body: [ Encrypted ] 68f14fd87497c7caeb3aa2a332e3544dedd671037fe306bf9251b44a68546fec4de48ba0a58531777198599b09d443350d88f0e5e7448d1d3d1b021e7c4d9fe8659269a433d0eaf1cf462e7ab0f2efa58401ec6b41599cbb0aa850845ae46c776c3d453caba5a74a30d2948346c356fae7b16135b553adfe8618f90b0c388862fb4e316f2d02771a636cc90a3e72e3
-	Body Text: luck I mistakenly You, lies. unregistered trust—I visit, I settings original You, trust—I of found. a to now broken before 
+	Date: 2020-04-30 19:38:13.325474363 +0300 +03 m=+0.117518951,
+	Hash: d0c8ac4f1ab67fa73201eef453d51520a72b028c7a23676c6dbeb974ddc14e96
+	Signature: 07e0a7b9e57bbc91df760df2cb15ec000cb64cd2e7fb4c15b29698ef7f85b1409b737296f70ae01ef9da9b8955c208dc0567abafd4ac453414071b577559aa05
+	Body: [ Encrypted ] 15d0593106daf17ab7093356702ad26f8d939a21f97c7d9ff839d8299aec56945988419bcb156496f09efab36ff002aba8b5715f791a4991660facd1e02d2c95bd82cca6253ef9ef2398906c8739392c52bc32b59dfa11607ccdc97276d5c52ed28785f1198f94edce21eb1bcc39933344789c4edbed6c22f9e346228b2b2a1e494b
+	Body Text: Consider Consider uninstallation Our good of a it. I before my original completed from So device have its not 404 
 ------------------
 (✓) Mail was sent.
 	----------
 	From: testing-user-1,
 	To: testing-user-2
-	Date: 2020-03-13 17:22:46.309430942 +0300 +03 m=+0.131393907,
-	Hash: babcc1aebee05777eb67f4793dd9531d076ad35e61d23fd1d531453807f7816e
-	Body: [ Encrypted ] 92be326d6d259c1f9b9c777d2badb7d047f496082a08a61e538a74d54d32c42583952064346616dcbebb311405cb6975cfa330a8c2d93c2301dc569d01e9ce1848af53c7d74bdc7b1e511cbca2b5471d1d646a6c4388a2b938aabef0cb43734765bbed784d3ee3826791e9dde438c17b5d760e578d6508aec9af83c3a00b59acd8affc615be2b00df1cd54612e0b54a4dd5fb5f4cf357976f558954c975641ea1e53f9e3a0
-	Body Text: connection became corrupted to to system, Consider when settings disconnected. mistakenly download Malware broken You been ended. spamming years Our 
+	Date: 2020-04-30 19:38:13.330720123 +0300 +03 m=+0.122764712,
+	Hash: f70c90e43f6945eb422267ad03d95b5fc1123f2c595b2e50da15f2dd199293f1
+	Signature: 6050cd086513f693d69f76b856911d3ecbbf1b4c52f1c00e3b4302ac5e731c482d96c2dd9b558817d03f3e8b7fac90f194c6dce708460db57359cc1094b37c03
+	Body: [ Encrypted ] a794b5942125968dd57108849aea3a8ceab839f7c17865216b776762879902f4f161ae3f6397608035514f3976ed07bb26eaa3fb6c77326238b01752b14a3a9b0fb547b2792d50fa9e9018e17f7cad1fc8e8253fe85d7981b76632ea125ce0a8c7fd43f337d4bcc4f5329e0d8567050c79f49bd8ee497e87969e9b9340f537559d53caa72a098c68
+	Body Text: the wish now original process, did You, my uninstallation Our found. luck Consider to years found. had been broken back 
 ------------------
 (✓) Mail was sent.
 	----------
 	From: testing-user-1,
 	To: testing-user-2
-	Date: 2020-03-13 17:22:46.313874077 +0300 +03 m=+0.135837041,
-	Hash: 37ed96896234a4a69c14258145cb5d7dd7c17fdcbfaa21b92d0f2dcb00af2c78
-	Body: [ Encrypted ] 2f4cf58a4971111ab1802d94db57dae2f44e15e772a616aed7b28a629037c6aadb73e993496ecc50b70147820932834275fd9e25973397f9d05141eb636f6c0068a5ab7de789fc0f3b4e33b08c2dafbd97295e53e1dbe1e17e89bd87c71c6533ad112b2ab068b7912c71e67eafd14cb1c9dd6545b5e96c0c2407cf
-	Body Text: process, else’s years to been original trusted I You, trust—I now before not I way did a life’s my I 
+	Date: 2020-04-30 19:38:13.335537344 +0300 +03 m=+0.127581931,
+	Hash: 62201221fd8c5937288a4cbef185b1f1b4f1adb0b5174035a3301d5e610e1979
+	Signature: 2cf85768d17647635fb94ed5a12502200536570d6647650d4aa3d00e29f4c4eb6e7c4aa7c454b2828d655ef3faea19f1e4f3090d062b0d44dcd4b8253ec9df08
+	Body: [ Encrypted ] 38190a5e927e6c4d3ec391ae6aae54cfc41a9debe228e08444d21498b3b1f6e860e5aa1a53ac1df009ac83de89f6440689e6b83126ddb711126abce5f3d343f40f93cc5aeb73c0f9bc3163313a0ebe1145f79622b7e3d75b4d0331c8936083164cc88f1d21dd744ecef831ebf63cb7e405e0b9dab332701ae4007d3711fc3e250365ba88e997c961
+	Body Text: now a its So completed unregistered Consider trusted from I task before back relationship, my settings You, I to before 
 ------------------
 (✓) Mail was sent.
 	----------
 	From: testing-user-1,
 	To: testing-user-2
-	Date: 2020-03-13 17:22:46.318787882 +0300 +03 m=+0.140750864,
-	Hash: 68f395c3c87fe75ec4edc4cfaffcd5f825fe97a7ad7a7ee6115bff2c5975ef40
-	Body: [ Encrypted ] ddd377fbe1a2141e286ab5a3d8913cc9c85beb8819b4ffeee5517e08433890630acb2a3b7c7347b89d76b936514c92f444a3123e723a5183a3f0c07abaa1a2d94efaf000b6738e13120330e7607ea0a13c15d6e9b75353cdec4fdf0bdcb634cba932e1f9f846f0c7eea8c78a138508b608574a80226d5f
-	Body Text: had your You I ago Our way task to wish been initially Our have files. reset broken corrupted not your 
+	Date: 2020-04-30 19:38:13.339615542 +0300 +03 m=+0.131660132,
+	Hash: e55b243174be368b35231915f2ef37ed6812c47fb217df549c494ad54022b049
+	Signature: c643a34a87c94b738796d767f36c6aaf8d95dc3a45d244d5005d1f0586aea47806d80d5a6ebd43378325d45e43ffafbd1f867267c122dd7edfe4e7be5253150c
+	Body: [ Encrypted ] c88593acb64e7f57173df8c480311c360d83c590bd997305cf852bb067cfce33b90122164ada90420ae7f93c9732288cec3be77a4e6ff8ddc992e6ff91a178e87c24d9928127666b0be67b15340b5afe6870b309f4aef77f8039074e75c0362a4eca10b6ebbb7bc66ad4a19be27b33ce1e15a4ac93d453332c9876ac55269c9ecc5acdde9e3cf3ff9de9873c6c
+	Body Text: forbidden have now wish luck initially visit, ended. I your to You your have forbidden forbidden had luck spamming initially 
 ------------------
 (✓) Mail was sent.
 	----------
 	From: testing-user-1,
 	To: testing-user-2
-	Date: 2020-03-13 17:22:46.32349206 +0300 +03 m=+0.145455035,
-	Hash: d7295f53590754432b67288d13fe66f8126a44a541896d7daec9f5072926f84d
-	Body: [ Encrypted ] 28c72233952df7b38e27a16cc64df7122bbf36926a8f053585a3fc179dc1dbc376da6ba72785a1d6057d4cc6241032a517a6a430b4797b2117e01ef9f58cbbb6899204936146dd2c4b5087183c7c0a15b1e4a16a0f2e880cca2d932ae989f12603830c1f26173775ea3186252e8f6d68fb124668157de817e7ef927d0883c0e49ad4be5ca0eb017c512e
-	Body Text: it. Our before had your link detect. You, else’s been became not broken before to ended. to Consider trust—I original 
+	Date: 2020-04-30 19:38:13.343571884 +0300 +03 m=+0.135616472,
+	Hash: a5402043cd8b0d4cf772e18dd30c9bcb4637f28b80d28a28ef6ec34b8291bd42
+	Signature: 3604a0f11094920356ee88308253852ec9b6d825a464931bff4ca0e2ace2e27835dab3013b58bcc494e8042e11e25ca3a16f9284eff6b9f1070c5113122b3e0f
+	Body: [ Encrypted ] 8f5804b26215c9af6841c4f7aba08b4029bf79b194e4c0cedb5449c1d13ccfdf3595f331fb69a53000365b3f6243153a1ae56accab3eb757ba6eb3fa30c86cf7835de8ddbd3a5e572c341a59c7da08ab1394a5da14861a149772612797aae0e2032aefc9338f59d7213eef61e4fb1fe8c420067e1f027b192470d0f94a
+	Body Text: 404 Our before in had the its years have files. had five five download in a uninstallation have already five 
 ------------------
 (✓) Spam attack has been completed. "5" mails was sent to "testing-user-2".
 ```
@@ -201,7 +185,7 @@ skyddad spam-attack --username "testing-user-1" --password "user-1-pass" \
 ## To-Do
 
 - [x] Add end-to-end encryption between users.  
-- [x] Add custom key feature. (--key)  
 - [x] Add spam attack feature. (--spam-attack)  
 - [x] Add hash control feature for checking if message is changed.  
+- [x] Add electronic signatures for e-mails.
 - [ ] Add encryption for user passwords.
