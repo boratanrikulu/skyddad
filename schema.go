@@ -6,9 +6,11 @@ import (
 
 type User struct {
 	gorm.Model
-	Username string `gorm:"unique;unique_index;not null"`
-	Password string `gorm:"not null"`
-	Mails    []Mail `gorm:"foreignkey:ToRefer;association_foreignkey:ID"`
+	Username   string `gorm:"unique;unique_index;not null"`
+	Password   string `gorm:"not null"`
+	Mails      []Mail `gorm:"foreignkey:ToRefer;association_foreignkey:ID"`
+	PublicKey  []byte
+	PrivateKey []byte
 }
 
 type Mail struct {
@@ -21,16 +23,9 @@ type Mail struct {
 	SymmetricKeyRefer uint
 	Body              string `gorm:"not null"`
 	Hash              string
-	IsEncrypted       bool      `gorm:"not null;default:false"`
-	Signature         Signature `gorm:"foreignkey:SignatureRefer"`
-	SignatureRefer    uint
+	IsEncrypted       bool `gorm:"not null;default:false"`
+	Signature         []byte
 }
-
-type Signature struct {
-	Value     string
-	PublicKey string
-}
-
 type SymmetricKey struct {
 	gorm.Model
 	Sender          User   `gorm:"foreignkey:SenderRefer;"`
@@ -42,5 +37,5 @@ type SymmetricKey struct {
 }
 
 func Migrate(db *gorm.DB) {
-	db.AutoMigrate(&User{}, &Mail{}, &Signature{}, &SymmetricKey{})
+	db.AutoMigrate(&User{}, &Mail{}, &SymmetricKey{})
 }

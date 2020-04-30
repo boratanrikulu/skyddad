@@ -35,11 +35,21 @@ func main() {
 						}
 						mails := Mails(currentUser, take)
 						for _, mail := range mails {
+							SetMailUser(&mail)
 							fmt.Printf("\t----------\n")
-							if isChanged(mail.Body, mail.Hash) {
-								fmt.Println("\t(!) Message is changed.")
+							if IsChanged(mail.Body, mail.Hash) {
+								fmt.Println("\t(!) Message is changed. Hash is NOT same!")
 							} else {
-								fmt.Println("\t(✓) Message is not changed.")
+								fmt.Println("\t(✓) Message is not changed. Hash is same.")
+							}
+							if len(mail.Signature) != 0 {
+								if IsSignatureReal(mail.From.PublicKey, []byte(mail.Hash), mail.Signature) {
+									fmt.Printf("\t(✓) Message is signed by %v. That's an real signature.\n", mail.From.Username)
+								} else {
+									fmt.Printf("\t(!) Message is signed by %v. But that signature is FAKE!\n", mail.From.Username)
+								}
+							} else {
+								fmt.Println("Message is not signed.")
 							}
 							setEncryptionInfo(&mail, "[ Decrypted ] ")
 							showMail(mail)
@@ -242,14 +252,16 @@ func showUser(user User) {
 }
 
 func showMail(mail Mail) {
-	from := User{}
-	to := User{}
-	db.Model(&mail).Association("From").Find(&from)
-	db.Model(&mail).Association("To").Find(&to)
-	fmt.Printf("\tFrom: %v,\n\tTo: %v\n\tDate: %v,\n\tHash: %v\n\tBody: %v\n",
-		from.Username,
-		to.Username,
+	SetMailUser(&mail)
+	signature := "\n\tSignature: There is no signature for this mail."
+	if len(mail.Signature) != 0 {
+		signature = fmt.Sprintf("\n\tSignature: %x", mail.Signature)
+	}
+	fmt.Printf("\tFrom: %v,\n\tTo: %v\n\tDate: %v,\n\tHash: %v%v\n\tBody: %v\n",
+		mail.From.Username,
+		mail.To.Username,
 		mail.CreatedAt,
 		mail.Hash,
+		signature,
 		mail.Body)
 }
