@@ -9,13 +9,14 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/urfave/cli/v2"
 
+	"github.com/boratanrikulu/skyddad/driver"
 	"github.com/boratanrikulu/skyddad/model"
 )
 
 var db *gorm.DB
 
 func main() {
-	db = Connect()
+	db = driver.Connect()
 	model.Migrate(db)
 	defer db.Close()
 
