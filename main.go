@@ -8,13 +8,15 @@ import (
 
 	"github.com/jinzhu/gorm"
 	"github.com/urfave/cli/v2"
+
+	"github.com/boratanrikulu/skyddad/model"
 )
 
 var db *gorm.DB
 
 func main() {
 	db = Connect()
-	Migrate(db)
+	model.Migrate(db)
 	defer db.Close()
 
 	app := &cli.App{
@@ -83,7 +85,7 @@ func main() {
 				Usage: "Send mail to the user.",
 				Action: func(c *cli.Context) error {
 					currentUser := LogIn(c.String("username"), c.String("password"))
-					toUser := User{}
+					toUser := model.User{}
 					db.Where("username = ?", c.String("to-user")).First(&toUser)
 					if currentUser.Username != "" {
 						if toUser.Username != "" {
@@ -166,7 +168,7 @@ func main() {
 				Usage: "Attack to the user with spam mails.",
 				Action: func(c *cli.Context) error {
 					currentUser := LogIn(c.String("username"), c.String("password"))
-					toUser := User{}
+					toUser := model.User{}
 					db.Where("username = ?", c.String("to-user")).First(&toUser)
 					if currentUser.Username != "" {
 						if toUser.Username != "" {
@@ -235,7 +237,7 @@ func main() {
 	}
 }
 
-func setEncryptionInfo(mail *Mail, info string) {
+func setEncryptionInfo(mail *model.Mail, info string) {
 	body := ""
 	if mail.IsEncrypted == true {
 		body += info
@@ -246,12 +248,12 @@ func setEncryptionInfo(mail *Mail, info string) {
 	mail.Body = body
 }
 
-func showUser(user User) {
+func showUser(user model.User) {
 	db.First(&user)
 	fmt.Printf("\tUsername: %v,\n\tPassword: %v,\n", user.Username, user.Password)
 }
 
-func showMail(mail Mail) {
+func showMail(mail model.Mail) {
 	SetMailUser(&mail)
 	signature := "\n\tSignature: There is no signature for this mail."
 	if len(mail.Signature) != 0 {
