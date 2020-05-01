@@ -1,4 +1,4 @@
-package main
+package crypto
 
 import (
 	"crypto/aes"
@@ -9,7 +9,9 @@ import (
 	"log"
 )
 
-func encrypt(body string, keya string) string {
+// Encrypts body that is send, by using keya.
+// It use Stream Cipher Algorithm (CFB).
+func Encrypt(body string, keya string) string {
 	// TO DO: change the key value.
 	key, _ := hex.DecodeString(keya)
 
@@ -37,7 +39,9 @@ func encrypt(body string, keya string) string {
 	return hex.EncodeToString(ciphertext)
 }
 
-func decrypt(encryptedBody, keya string) string {
+// Decrypts body that is send, by using keya.
+// It use Stream Cipher Algorithm (CFB).
+func Decrypt(encryptedBody, keya string) string {
 	// Load your secret key from a safe place and reuse it across multiple
 	// NewCipher calls. (Obviously don't use this example key for anything
 	// real.) If you want to convert a passphrase to a key, use a suitable

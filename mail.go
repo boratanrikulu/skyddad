@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/boratanrikulu/skyddad/crypto"
 	"github.com/boratanrikulu/skyddad/model"
 )
 
@@ -58,7 +59,7 @@ func SendMail(from model.User, to model.User, body string, keyFromUser string) (
 		}
 
 		if symmetricKey.Key != "" {
-			body = encrypt(body, symmetricKey.Key)
+			body = crypto.Encrypt(body, symmetricKey.Key)
 			mail.SymmetricKey = symmetricKey
 			mail.IsEncrypted = true
 		} else {
@@ -167,7 +168,7 @@ func decryptMails(mails []model.Mail) []model.Mail {
 		if mail.IsEncrypted == true {
 			symmetricKey := model.SymmetricKey{}
 			db.Model(&mail).Association("SymmetricKey").Find(&symmetricKey)
-			mail.Body = decrypt(mail.Body, symmetricKey.Key)
+			mail.Body = crypto.Decrypt(mail.Body, symmetricKey.Key)
 			decryptedMails = append(decryptedMails, mail)
 		} else {
 			decryptedMails = append(decryptedMails, mail)
