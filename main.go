@@ -9,16 +9,17 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/urfave/cli/v2"
 
+	"github.com/boratanrikulu/skyddad/controller"
 	"github.com/boratanrikulu/skyddad/driver"
 	"github.com/boratanrikulu/skyddad/model"
 )
 
-var db *gorm.DB
+var DB *gorm.DB
 
 func main() {
-	db = driver.Connect()
-	model.Migrate(db)
-	defer db.Close()
+	DB = driver.Connect()
+	model.Migrate(DB)
+	defer DB.Close()
 
 	app := &cli.App{
 		Name:  "Skyddad",
@@ -28,7 +29,7 @@ func main() {
 				Name:  "mails",
 				Usage: "Show all mails that were sent by the user.",
 				Action: func(c *cli.Context) error {
-					currentUser := LogIn(c.String("username"), c.String("password"))
+					currentUser := controller.LogIn(c.String("username"), c.String("password"))
 					if currentUser.Username != "" {
 						fmt.Printf("------------------\n")
 						fmt.Printf("To: %v\n", currentUser.Username)
@@ -36,17 +37,17 @@ func main() {
 						if take == "" {
 							take = "-1"
 						}
-						mails := Mails(currentUser, take)
+						mails := controller.Mails(currentUser, take)
 						for _, mail := range mails {
-							SetMailUser(&mail)
+							controller.SetMailUser(&mail)
 							fmt.Printf("\t----------\n")
-							if IsChanged(mail.Body, mail.Hash) {
+							if controller.IsChanged(mail.Body, mail.Hash) {
 								fmt.Println("\t(!) Message is changed. Hash is NOT same!")
 							} else {
 								fmt.Println("\t(✓) Message is not changed. Hash is same.")
 							}
 							if len(mail.Signature) != 0 {
-								if IsSignatureReal(mail.From.PublicKey, []byte(mail.Hash), mail.Signature) {
+								if controller.IsSignatureReal(mail.From.PublicKey, []byte(mail.Hash), mail.Signature) {
 									fmt.Printf("\t(✓) Message is signed by %v. That's an real signature.\n", mail.From.Username)
 								} else {
 									fmt.Printf("\t(!) Message is signed by %v. But that signature is FAKE!\n", mail.From.Username)
@@ -85,12 +86,12 @@ func main() {
 				Name:  "send-mail",
 				Usage: "Send mail to the user.",
 				Action: func(c *cli.Context) error {
-					currentUser := LogIn(c.String("username"), c.String("password"))
+					currentUser := controller.LogIn(c.String("username"), c.String("password"))
 					toUser := model.User{}
-					db.Where("username = ?", c.String("to-user")).First(&toUser)
+					DB.Where("username = ?", c.String("to-user")).First(&toUser)
 					if currentUser.Username != "" {
 						if toUser.Username != "" {
-							result, mail := SendMail(currentUser, toUser, c.String("body"), c.String("key"))
+							result, mail := controller.SendMail(currentUser, toUser, c.String("body"), c.String("key"))
 							if result {
 								fmt.Printf("------------------\n")
 								fmt.Println("(✓) Mail was sent.")
@@ -142,7 +143,7 @@ func main() {
 				Name:  "sign-up",
 				Usage: "Sign up to the mail service.",
 				Action: func(c *cli.Context) error {
-					result, user := SingUp(c.String("username"), c.String("password"))
+					result, user := controller.SingUp(c.String("username"), c.String("password"))
 					if result {
 						fmt.Println("(✓) User was created.")
 						showUser(user)
@@ -168,9 +169,9 @@ func main() {
 				Name:  "spam-attack",
 				Usage: "Attack to the user with spam mails.",
 				Action: func(c *cli.Context) error {
-					currentUser := LogIn(c.String("username"), c.String("password"))
+					currentUser := controller.LogIn(c.String("username"), c.String("password"))
 					toUser := model.User{}
-					db.Where("username = ?", c.String("to-user")).First(&toUser)
+					DB.Where("username = ?", c.String("to-user")).First(&toUser)
 					if currentUser.Username != "" {
 						if toUser.Username != "" {
 							count, err := strconv.Atoi(c.String("number-of-mails"))
@@ -178,8 +179,8 @@ func main() {
 								log.Fatal("Number of emails value must be an integer.")
 							}
 							for i := 0; i < count; i++ {
-								body := randomMails()
-								result, mail := SendMail(currentUser, toUser, body, c.String("key"))
+								body := controller.RandomMails()
+								result, mail := controller.SendMail(currentUser, toUser, body, c.String("key"))
 								if result {
 									fmt.Printf("------------------\n")
 									fmt.Println("(✓) Mail was sent.")
@@ -250,12 +251,12 @@ func setEncryptionInfo(mail *model.Mail, info string) {
 }
 
 func showUser(user model.User) {
-	db.First(&user)
+	DB.First(&user)
 	fmt.Printf("\tUsername: %v,\n\tPassword: %v,\n", user.Username, user.Password)
 }
 
 func showMail(mail model.Mail) {
-	SetMailUser(&mail)
+	controller.SetMailUser(&mail)
 	signature := "\n\tSignature: There is no signature for this mail."
 	if len(mail.Signature) != 0 {
 		signature = fmt.Sprintf("\n\tSignature: %x", mail.Signature)
