@@ -24,19 +24,11 @@ type Mail struct {
 	SymmetricKey      SymmetricKey `gorm:"foreignkey:SymmetricKeyRefer"`
 	SymmetricKeyRefer uint
 	Body              string `gorm:"not null"`
+	Image             []byte
+	IsContainImage    bool
 	Hash              string
 	IsEncrypted       bool `gorm:"not null;default:false"`
 	Signature         []byte
-}
-
-// ImageMail model.
-type ImageMail struct {
-	gorm.Model
-	From      User   `gorm:"foreignkey:FromRefer"`
-	FromRefer uint   `gorm:"not null"`
-	To        User   `gorm:"foreignkey:ToRefer"`
-	ToRefer   uint   `gorm:"not null"`
-	Image     []byte `gorm:"not null"`
 }
 
 // Symmetric Key model.
@@ -52,5 +44,5 @@ type SymmetricKey struct {
 
 // Migrate method makes migrations by using gorm.
 func Migrate(db *gorm.DB) {
-	db.AutoMigrate(&User{}, &Mail{}, &ImageMail{}, &SymmetricKey{})
+	db.AutoMigrate(&User{}, &Mail{}, &SymmetricKey{})
 }

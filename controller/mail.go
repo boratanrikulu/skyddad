@@ -57,7 +57,7 @@ func SingUp(username string, password string) (bool, model.User) {
 //
 // If mail is sent, method will return true and mail that is sent.
 // If could not sent, method will return false and nil.
-func SendMail(from model.User, to model.User, body string, keyFromUser string) (bool, model.Mail) {
+func SendMail(from model.User, to model.User, body string, keyFromUser string, secretMessage string, imagePath string) (bool, model.Mail) {
 	if len(keyFromUser) == 0 || len(keyFromUser) == 32 || len(keyFromUser) == 64 {
 		symmetricKey := model.SymmetricKey{}
 		setSymmetricKey(&symmetricKey, keyFromUser, from, to)
@@ -80,6 +80,11 @@ func SendMail(from model.User, to model.User, body string, keyFromUser string) (
 		}
 		mail.Body = body
 
+		if !isEmpty(secretMessage) {
+			// That means there is a image to send with a secret message.
+			setImageAndSecret(&mail, secretMessage, imagePath)
+		}
+
 		if len(from.PrivateKey) != 0 {
 			// If user sent it's private key
 			// that means user wants to sign it's mail.
@@ -91,29 +96,6 @@ func SendMail(from model.User, to model.User, body string, keyFromUser string) (
 	} else {
 		panic("Key length must be 32 or 64.")
 	}
-}
-
-// SendMail sends image mails from-user to to-user.
-// By sending image, secretMessage is encoded to the image.
-//
-// If mail is sent, method will return true and mail that is sent.
-// If could not sent, method will return false and nil.
-func SendImage(from model.User, to model.User, secretMessage string, imagePath string) (bool, model.ImageMail) {
-	plainImage, err := ioutil.ReadFile(imagePath)
-	if err != nil {
-		log.Fatalf("Error occur while reading test image: %v", err)
-	}
-
-	secretImage := crypto.EncodeSteganography(secretMessage, plainImage)
-
-	imageMail := model.ImageMail{
-		From:  from,
-		To:    to,
-		Image: secretImage,
-	}
-
-	DB.Create(&imageMail)
-	return !DB.NewRecord(imageMail), imageMail
 }
 
 // Users can see their mails.
@@ -140,16 +122,6 @@ func SetMailUser(mail *model.Mail) {
 		Find(&mail.To)
 }
 
-func SetImageMailUser(imageMail *model.ImageMail) {
-	DB.Model(imageMail).
-		Association("From").
-		Find(&imageMail.From)
-
-	DB.Model(imageMail).
-		Association("To").
-		Find(&imageMail.To)
-}
-
 // IsChanged checks if mail is changed.
 func IsChanged(body string, hash string) bool {
 	bodyHash := sha256.New()
@@ -158,8 +130,6 @@ func IsChanged(body string, hash string) bool {
 	if hex.EncodeToString(bodyHash.Sum(nil)) == hash {
 		return false
 	}
-
-	// or
 
 	return true
 }
@@ -184,6 +154,23 @@ func RandomMails() string {
 }
 
 // Private methods
+
+// SendMail sends image mails from-user to to-user.
+// By sending image, secretMessage is encoded to the image.
+//
+// If mail is sent, method will return true and mail that is sent.
+// If could not sent, method will return false and nil.
+func setImageAndSecret(mail *model.Mail, secretMessage string, imagePath string) {
+	plainImage, err := ioutil.ReadFile(imagePath)
+	if err != nil {
+		log.Fatalf("Error occur while reading test image: %v", err)
+	}
+
+	secretImage := crypto.EncodeSteganography(secretMessage, plainImage)
+
+	mail.Image = secretImage
+	mail.IsContainImage = true
+}
 
 func setSignature(mail *model.Mail, from *model.User) {
 	// User's private key to sign mail.
@@ -235,4 +222,11 @@ func decryptMails(mails []model.Mail) []model.Mail {
 		}
 	}
 	return decryptedMails
+}
+
+func isEmpty(s string) bool {
+	if len(strings.TrimSpace(s)) == 0 {
+		return true
+	}
+	return false
 }
