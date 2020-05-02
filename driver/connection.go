@@ -1,4 +1,4 @@
-package main
+package driver
 
 import (
 	"fmt"
@@ -10,16 +10,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
-func loadEnv() {
-	err := godotenv.Load()
-	if err != nil {
-		err = godotenv.Load(os.Getenv("HOME") + "/.config/skyddad/.env")
-		if err != nil {
-			log.Fatal("Error loading .env file")
-		}
-	}
-}
-
+// Make a connection between PostgreSQL database that is defined at the env file.
 func Connect() *gorm.DB {
 	loadEnv()
 	dbinfo := fmt.Sprintf("host=%v port=%v user=%v password=%v, dbname=%v sslmode=%v",
@@ -34,4 +25,16 @@ func Connect() *gorm.DB {
 		panic(err.Error())
 	}
 	return db
+}
+
+// Private methods
+
+func loadEnv() {
+	err := godotenv.Load()
+	if err != nil {
+		err = godotenv.Load(os.Getenv("HOME") + "/.config/skyddad/.env")
+		if err != nil {
+			log.Fatal("Error loading .env file")
+		}
+	}
 }
