@@ -5,6 +5,8 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"io/ioutil"
+	"log"
 	"math/rand"
 	"strings"
 	"time"
@@ -12,12 +14,17 @@ import (
 	"github.com/jinzhu/gorm"
 
 	"github.com/boratanrikulu/skyddad/crypto"
+	"github.com/boratanrikulu/skyddad/driver"
 	"github.com/boratanrikulu/skyddad/model"
 )
 
-// Connection is set on the main.
-// This variable is for just to use global variable.
+// DB variable is exported to use on the whole project.
+// Connection is set by using driver/connection.
 var DB *gorm.DB
+
+func init() {
+	DB = driver.Connect()
+}
 
 // LogIn takes username and password.
 // It returns user that match If there is.
@@ -86,6 +93,29 @@ func SendMail(from model.User, to model.User, body string, keyFromUser string) (
 	}
 }
 
+// SendMail sends image mails from-user to to-user.
+// By sending image, secretMessage is encoded to the image.
+//
+// If mail is sent, method will return true and mail that is sent.
+// If could not sent, method will return false and nil.
+func SendImage(from model.User, to model.User, secretMessage string, imagePath string) (bool, model.ImageMail) {
+	plainImage, err := ioutil.ReadFile(imagePath)
+	if err != nil {
+		log.Fatalf("Error occur while reading test image: %v", err)
+	}
+
+	secretImage := crypto.EncodeSteganography(secretMessage, plainImage)
+
+	imageMail := model.ImageMail{
+		From:  from,
+		To:    to,
+		Image: secretImage,
+	}
+
+	DB.Create(&imageMail)
+	return !DB.NewRecord(imageMail), imageMail
+}
+
 // Users can see their mails.
 // It also support 'take' option to limit messages.
 func Mails(user model.User, take string) []model.Mail {
@@ -108,6 +138,16 @@ func SetMailUser(mail *model.Mail) {
 	DB.Model(mail).
 		Association("To").
 		Find(&mail.To)
+}
+
+func SetImageMailUser(imageMail *model.ImageMail) {
+	DB.Model(imageMail).
+		Association("From").
+		Find(&imageMail.From)
+
+	DB.Model(imageMail).
+		Association("To").
+		Find(&imageMail.To)
 }
 
 // IsChanged checks if mail is changed.

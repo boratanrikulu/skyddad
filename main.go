@@ -6,7 +6,6 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/jinzhu/gorm"
 	"github.com/urfave/cli/v2"
 
 	"github.com/boratanrikulu/skyddad/controller"
@@ -16,10 +15,15 @@ import (
 
 // DB variable is exported to use on the whole project.
 // Connection is set by using driver/connection.
-var DB *gorm.DB
+var (
+	DB = driver.Connect()
+)
+
+func init() {
+	DB = driver.Connect()
+}
 
 func main() {
-	DB = driver.Connect()
 	model.Migrate(DB)
 	defer DB.Close()
 
@@ -232,6 +236,63 @@ func main() {
 					},
 				},
 			},
+			{
+				Name:  "send-image",
+				Usage: "Send an image that is contain a secret message. (Steganography)",
+				Action: func(c *cli.Context) error {
+					currentUser := controller.LogIn(c.String("username"), c.String("password"))
+					toUser := model.User{}
+					DB.Where("username = ?", c.String("to-user")).First(&toUser)
+					if currentUser.Username != "" {
+						if toUser.Username != "" {
+							// result, mail := controller.SendMail(currentUser, toUser, c.String("body"), c.String("key"))
+							result, imageMail := controller.SendImage(currentUser, toUser, c.String("secret-message"), c.String("image-path"))
+							if result {
+								fmt.Printf("------------------\n")
+								fmt.Println("(✓) Mail was sent.")
+								fmt.Printf("\t----------\n")
+								showImageMail(imageMail)
+								fmt.Printf("------------------\n")
+								fmt.Printf("(✓) A mail was sent to \"%v\" from \"%v\".\n", currentUser.Username, toUser.Username)
+							} else {
+								fmt.Println("(!) Error occur while sending image-mail.")
+							}
+						} else {
+							fmt.Printf("(!) There is no user to send mail: %v.\n", toUser.Username)
+						}
+					} else {
+						fmt.Println("(!) Incorrect username or password.")
+					}
+					return nil
+				},
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:     "username, u",
+						Usage:    "Your username to use mail service.",
+						Required: true,
+					},
+					&cli.StringFlag{
+						Name:     "password, p",
+						Usage:    "Your password to use mail service.",
+						Required: true,
+					},
+					&cli.StringFlag{
+						Name:     "to-user, t",
+						Usage:    "Username to send mail.",
+						Required: true,
+					},
+					&cli.StringFlag{
+						Name:     "secret-message, s",
+						Usage:    "Secret message to encode into the image.",
+						Required: true,
+					},
+					&cli.StringFlag{
+						Name:     "image-path, s",
+						Usage:    "Image path to send to the user.",
+						Required: true,
+					},
+				},
+			},
 		},
 	}
 
@@ -270,4 +331,12 @@ func showMail(mail model.Mail) {
 		mail.Hash,
 		signature,
 		mail.Body)
+}
+
+func showImageMail(imageMail model.ImageMail) {
+	controller.SetImageMailUser(&imageMail)
+	fmt.Printf("\tFrom: %v,\n\tTo: %v\n\tDate: %v\n",
+		imageMail.From.Username,
+		imageMail.To.Username,
+		imageMail.CreatedAt)
 }
