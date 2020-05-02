@@ -14,6 +14,8 @@ import (
 	"github.com/boratanrikulu/skyddad/model"
 )
 
+// DB variable is exported to use on the whole project.
+// Connection is set by using driver/connection.
 var DB *gorm.DB
 
 func main() {
