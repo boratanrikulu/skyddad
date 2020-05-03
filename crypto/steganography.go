@@ -3,6 +3,8 @@ package crypto
 import (
 	"bytes"
 	"image"
+	_ "image/jpeg"
+	_ "image/png"
 	"log"
 
 	"github.com/auyer/steganography"
