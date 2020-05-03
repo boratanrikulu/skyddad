@@ -9,7 +9,7 @@ import (
 	"log"
 )
 
-// Encrypts body that is send, by using keya.
+// Encrypt method encrypts body that is send, by using keya.
 // It use Stream Cipher Algorithm (CFB).
 func Encrypt(body string, keya string) string {
 	// TO DO: change the key value.
@@ -39,7 +39,7 @@ func Encrypt(body string, keya string) string {
 	return hex.EncodeToString(ciphertext)
 }
 
-// Decrypts body that is send, by using keya.
+// Decrypt method decrypts body that is send, by using keya.
 // It use Stream Cipher Algorithm (CFB).
 func Decrypt(encryptedBody, keya string) string {
 	// Load your secret key from a safe place and reuse it across multiple

@@ -24,6 +24,8 @@ type Mail struct {
 	SymmetricKey      SymmetricKey `gorm:"foreignkey:SymmetricKeyRefer"`
 	SymmetricKeyRefer uint
 	Body              string `gorm:"not null"`
+	Image             []byte
+	IsContainImage    bool
 	Hash              string
 	IsEncrypted       bool `gorm:"not null;default:false"`
 	Signature         []byte

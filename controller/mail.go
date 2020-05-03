@@ -5,19 +5,27 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"io/ioutil"
+	"log"
 	"math/rand"
+	"os"
 	"strings"
 	"time"
 
 	"github.com/jinzhu/gorm"
 
 	"github.com/boratanrikulu/skyddad/crypto"
+	"github.com/boratanrikulu/skyddad/driver"
 	"github.com/boratanrikulu/skyddad/model"
 )
 
-// Connection is set on the main.
-// This variable is for just to use global variable.
+// DB variable is exported to use on the whole project.
+// Connection is set by using driver/connection.
 var DB *gorm.DB
+
+func init() {
+	DB = driver.Connect()
+}
 
 // LogIn takes username and password.
 // It returns user that match If there is.
@@ -50,7 +58,7 @@ func SingUp(username string, password string) (bool, model.User) {
 //
 // If mail is sent, method will return true and mail that is sent.
 // If could not sent, method will return false and nil.
-func SendMail(from model.User, to model.User, body string, keyFromUser string) (bool, model.Mail) {
+func SendMail(from model.User, to model.User, body string, keyFromUser string, secretMessage string, imagePath string) (bool, model.Mail) {
 	if len(keyFromUser) == 0 || len(keyFromUser) == 32 || len(keyFromUser) == 64 {
 		symmetricKey := model.SymmetricKey{}
 		setSymmetricKey(&symmetricKey, keyFromUser, from, to)
@@ -72,6 +80,11 @@ func SendMail(from model.User, to model.User, body string, keyFromUser string) (
 			mail.IsEncrypted = false
 		}
 		mail.Body = body
+
+		if !isEmpty(secretMessage) {
+			// That means there is a image to send with a secret message.
+			setImageAndSecret(&mail, secretMessage, imagePath)
+		}
 
 		if len(from.PrivateKey) != 0 {
 			// If user sent it's private key
@@ -119,8 +132,6 @@ func IsChanged(body string, hash string) bool {
 		return false
 	}
 
-	// or
-
 	return true
 }
 
@@ -143,7 +154,41 @@ func RandomMails() string {
 	return spamMail
 }
 
+// CreateTempFile creates temp file by using given byte array.
+func CreateTempFile(image []byte) *os.File {
+	file, err := ioutil.TempFile("./", "secret")
+	if err != nil {
+		log.Fatal(err)
+	}
+	file.Write(image)
+
+	return file
+}
+
+// GetSecretMessageFromImage gets secret from image by using DecodeSteganography method.
+func GetSecretMessageFromImage(image []byte) string {
+	secret := crypto.DecodeSteganography(image)
+	return secret
+}
+
 // Private methods
+
+// SendMail sends image mails from-user to to-user.
+// By sending image, secretMessage is encoded to the image.
+//
+// If mail is sent, method will return true and mail that is sent.
+// If could not sent, method will return false and nil.
+func setImageAndSecret(mail *model.Mail, secretMessage string, imagePath string) {
+	plainImage, err := ioutil.ReadFile(imagePath)
+	if err != nil {
+		log.Fatalf("Error occur while reading test image: %v", err)
+	}
+
+	secretImage := crypto.EncodeSteganography(secretMessage, plainImage)
+
+	mail.Image = secretImage
+	mail.IsContainImage = true
+}
 
 func setSignature(mail *model.Mail, from *model.User) {
 	// User's private key to sign mail.
@@ -195,4 +240,11 @@ func decryptMails(mails []model.Mail) []model.Mail {
 		}
 	}
 	return decryptedMails
+}
+
+func isEmpty(s string) bool {
+	if len(strings.TrimSpace(s)) == 0 {
+		return true
+	}
+	return false
 }
