@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"log"
 	"math/rand"
+	"os"
 	"strings"
 	"time"
 
@@ -151,6 +152,23 @@ func RandomMails() string {
 	}
 
 	return spamMail
+}
+
+// CreateTempFile creates temp file by using given byte array.
+func CreateTempFile(image []byte) *os.File {
+	file, err := ioutil.TempFile("./", "secret")
+	if err != nil {
+		log.Fatal(err)
+	}
+	file.Write(image)
+
+	return file
+}
+
+// GetSecretMessageFromImage gets secret from image by using DecodeSteganography method.
+func GetSecretMessageFromImage(image []byte) string {
+	secret := crypto.DecodeSteganography(image)
+	return secret
 }
 
 // Private methods

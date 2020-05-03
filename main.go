@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -46,24 +47,7 @@ func main() {
 						}
 						mails := controller.Mails(currentUser, take)
 						for _, mail := range mails {
-							controller.SetMailUser(&mail)
-							fmt.Printf("\t----------\n")
-							if controller.IsChanged(mail.Body, mail.Hash) {
-								fmt.Println("\t(!) Message is changed. Hash is NOT same!")
-							} else {
-								fmt.Println("\t(✓) Message is not changed. Hash is same.")
-							}
-							if len(mail.Signature) != 0 {
-								if controller.IsSignatureReal(mail.From.PublicKey, []byte(mail.Hash), mail.Signature) {
-									fmt.Printf("\t(✓) Message is signed by %v. That's an real signature.\n", mail.From.Username)
-								} else {
-									fmt.Printf("\t(!) Message is signed by %v. But that signature is FAKE!\n", mail.From.Username)
-								}
-							} else {
-								fmt.Println("Message is not signed.")
-							}
-							setEncryptionInfo(&mail, "[ Decrypted ] ")
-							showMail(mail)
+							showRecivedMail(&mail)
 						}
 						fmt.Printf("------------------\n")
 						fmt.Printf("(✓) \"%v\" mails are listed for \"%v\" user.\n", len(mails), c.String("username"))
@@ -108,7 +92,7 @@ func main() {
 								fmt.Println("(✓) Mail was sent.")
 								fmt.Printf("\t----------\n")
 								setEncryptionInfo(&mail, "[ Encrypted ] ")
-								showMail(mail)
+								showSendMail(&mail)
 								fmt.Printf("------------------\n")
 								fmt.Printf("(✓) A mail was sent to \"%v\" from \"%v\".\n", currentUser.Username, toUser.Username)
 							} else {
@@ -208,7 +192,7 @@ func main() {
 									fmt.Println("(✓) Mail was sent.")
 									setEncryptionInfo(&mail, "[ Encrypted ] ")
 									fmt.Printf("\t----------\n")
-									showMail(mail)
+									showSendMail(&mail)
 									fmt.Printf("\tBody Text: %v\n", body)
 								} else {
 									fmt.Println("(!) Error occur while sending mail.")
@@ -277,8 +261,25 @@ func showUser(user model.User) {
 	fmt.Printf("\tUsername: %v,\n\tPassword: %v,\n", user.Username, user.Password)
 }
 
-func showMail(mail model.Mail) {
-	controller.SetMailUser(&mail)
+func showRecivedMail(mail *model.Mail) {
+	controller.SetMailUser(mail)
+	fmt.Printf("\t----------\n")
+	if controller.IsChanged(mail.Body, mail.Hash) {
+		fmt.Println("\t(!) Message is changed. Hash is NOT same!")
+	} else {
+		fmt.Println("\t(✓) Message is not changed. Hash is same.")
+	}
+	if len(mail.Signature) != 0 {
+		if controller.IsSignatureReal(mail.From.PublicKey, []byte(mail.Hash), mail.Signature) {
+			fmt.Printf("\t(✓) Message is signed by %v. That's an real signature.\n", mail.From.Username)
+		} else {
+			fmt.Printf("\t(!) Message is signed by %v. But that signature is FAKE!\n", mail.From.Username)
+		}
+	} else {
+		fmt.Println("Message is not signed.")
+	}
+	setEncryptionInfo(mail, "[ Decrypted ] ")
+
 	signature := "\n\tSignature: There is no signature for this mail."
 	if len(mail.Signature) != 0 {
 		signature = fmt.Sprintf("\n\tSignature: %x", mail.Signature)
@@ -290,6 +291,43 @@ func showMail(mail model.Mail) {
 		mail.Hash,
 		signature,
 		mail.Body)
+
+	if mail.IsContainImage {
+		file := controller.CreateTempFile(mail.Image)
+		secretMessage := controller.GetSecretMessageFromImage(mail.Image)
+		path, err := filepath.Abs(file.Name())
+		if err == nil {
+			fmt.Println("\t----------")
+			fmt.Println("\tImage: It containes an secret image.")
+			fmt.Printf("\tImage saved at: \"%v\"\n", path)
+			fmt.Printf("\tImage contains a secret message,\n")
+			fmt.Printf("\tIt says: \"%v\"\n", secretMessage)
+			fmt.Println("\t----------")
+		}
+	}
+}
+
+func showSendMail(mail *model.Mail) {
+	controller.SetMailUser(mail)
+	signature := "\n\tSignature: There is no signature for this mail."
+	if len(mail.Signature) != 0 {
+		signature = fmt.Sprintf("\n\tSignature: %x", mail.Signature)
+	}
+	fmt.Printf("\tFrom: %v,\n\tTo: %v\n\tDate: %v,\n\tHash: %v%v\n\tBody: %v\n",
+		mail.From.Username,
+		mail.To.Username,
+		mail.CreatedAt,
+		mail.Hash,
+		signature,
+		mail.Body)
+
+	if mail.IsContainImage {
+		secretMessage := controller.GetSecretMessageFromImage(mail.Image)
+		fmt.Println("\t----------")
+		fmt.Println("\tImage: Secret image is attach to mail.")
+		fmt.Printf("\tImage has this secret message: \"%v\"\n", secretMessage)
+		fmt.Println("\t----------")
+	}
 }
 
 func isEmpty(s string) bool {
