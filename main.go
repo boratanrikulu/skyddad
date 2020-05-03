@@ -47,6 +47,7 @@ func main() {
 						}
 						mails := controller.Mails(currentUser, take)
 						for _, mail := range mails {
+							fmt.Println("------------------")
 							showRecivedMail(&mail)
 						}
 						fmt.Printf("------------------\n")
@@ -263,7 +264,6 @@ func showUser(user model.User) {
 
 func showRecivedMail(mail *model.Mail) {
 	controller.SetMailUser(mail)
-	fmt.Printf("\t----------\n")
 	if controller.IsChanged(mail.Body, mail.Hash) {
 		fmt.Println("\t(!) Message is changed. Hash is NOT same!")
 	} else {

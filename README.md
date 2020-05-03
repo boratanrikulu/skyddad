@@ -9,6 +9,7 @@ This program was written for Cryptology lesson that's given at Pamukkale Univers
 - All mails are encrypted by using [**Stream Cipher Algorithm (CFB)**](https://golang.org/pkg/crypto/cipher/#Stream).  
 - You can simply see if mails are changed. Mail hashes are calculated by using SHA-256 algorithm [**crypto/sha256**](https://golang.org/pkg/crypto/sha256).
 - Mails are signed by using [**ED25519 Algorithm**](https://golang.org/pkg/crypto/ed25519/). That is an automatic operation. When you signup to system, private and public keys are created. When you send a mail, the mail will be signed by using your private key. Users checks received email's signatures by checking from-user's public key.
+- It support sending secret images (Steganography). It use [**auyer/steganography**](https://github.com/auyer/steganography) library.
 
 ## Installation
 
@@ -119,6 +120,79 @@ To: testing-user-2
 
 ---
 
+#### Sending mails that contains secret images.
+```bash
+skyddad send-mail --username "testing-user-1" --password "user-1-pass" \
+                  --to-user "testing-user-2" \
+                  --body "Top secret message." \
+                  --secret-message "A message to encode to image." \
+                  --image-path "/path/to/F.jpg"
+```
+
+#### Excepted result.
+```
+------------------
+(✓) Mail was sent.
+	----------
+	From: testing-user-1,
+	To: testing-user-2
+	Date: 2020-05-03 03:29:09.338050197 +0300 +03 m=+6.320650255,
+	Hash: f1b8a5f9377b8b77a21eb61234383d5c071aca09cdd20bacbd88dafeef6bf3a4
+	Signature: 0f3137f99bb5dee5964771cbc7e69173e7a287f2ecc6f0aa061988c0d669095a4299cd8cc8b90d4689ae20eab10d68a6f14da6fd1fd57f29ac49b9b60e82480d
+	Body: [ Encrypted ] 57af225317b106c0af1c5e14799ad34162dbb24fba50ff0be60d83f07ae931da040011
+	----------
+	Image: Secret image is attach to mail.
+	Image has this secret message: "A message to encode to image."
+	----------
+------------------
+(✓) A mail was sent to "testing-user-1" from "testing-user-2".
+```
+
+---
+
+#### Showing mails that contains secret images.
+It is same with normal mails.  
+If image is attached to mail,  
+you will see the image address and the secret message.
+```bash
+skyddad mails --username "testing-user-2" --password "user-2-pass"
+```
+
+#### Excepted result.
+```
+------------------
+To: testing-user-2
+------------------
+	(✓) Message is not changed. Hash is same.
+	(✓) Message is signed by testing-user-1. That's an real signature.
+	From: testing-user-1,
+	To: testing-user-2
+	Date: 2020-05-03 03:32:37.894067 +0300 +03,
+	Hash: f1b8a5f9377b8b77a21eb61234383d5c071aca09cdd20bacbd88dafeef6bf3a4
+	Signature: 0f3137f99bb5dee5964771cbc7e69173e7a287f2ecc6f0aa061988c0d669095a4299cd8cc8b90d4689ae20eab10d68a6f14da6fd1fd57f29ac49b9b60e82480d
+	Body: [ Decrypted ] Top secret message.
+	----------
+	Image: It containes an secret image.
+	Image saved at: "/path/to/secret489931897"
+	Image contains a secret message,
+	It says: "A message to encode to image."
+	----------
+------------------
+	(✓) Message is not changed. Hash is same.
+	(✓) Message is signed by testing-user-1. That's an real signature.
+	From: testing-user-1,
+	To: testing-user-2
+	Date: 2020-05-03 03:32:27.952383 +0300 +03,
+	Hash: f1b8a5f9377b8b77a21eb61234383d5c071aca09cdd20bacbd88dafeef6bf3a4
+	Signature: 0f3137f99bb5dee5964771cbc7e69173e7a287f2ecc6f0aa061988c0d669095a4299cd8cc8b90d4689ae20eab10d68a6f14da6fd1fd57f29ac49b9b60e82480d
+	Body: [ Decrypted ] Top secret message.
+------------------
+(✓) "2" mails are listed for "testing-user-2" user.
+
+```
+
+---
+
 #### Spam attack to the user.
 ```bash
 skyddad spam-attack --username "testing-user-1" --password "user-1-pass" \
@@ -188,4 +262,5 @@ skyddad spam-attack --username "testing-user-1" --password "user-1-pass" \
 - [x] Add spam attack feature. (--spam-attack)  
 - [x] Add hash control feature for checking if message is changed.  
 - [x] Add electronic signatures for e-mails.
+- [x] Add secret image option (Steganography).
 - [ ] Add encryption for user passwords.
