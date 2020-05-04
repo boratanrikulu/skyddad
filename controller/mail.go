@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/jinzhu/gorm"
+	bimg "gopkg.in/h2non/bimg.v1"
 
 	"github.com/boratanrikulu/skyddad/crypto"
 	"github.com/boratanrikulu/skyddad/driver"
@@ -58,7 +59,7 @@ func SingUp(username string, password string) (bool, model.User) {
 //
 // If mail is sent, method will return true and mail that is sent.
 // If could not sent, method will return false and nil.
-func SendMail(from model.User, to model.User, body string, keyFromUser string, secretMessage string, imagePath string) (bool, model.Mail) {
+func SendMail(from model.User, to model.User, body string, keyFromUser string, secretMessage string, watermark string, imagePath string) (bool, model.Mail) {
 	if len(keyFromUser) == 0 || len(keyFromUser) == 32 || len(keyFromUser) == 64 {
 		symmetricKey := model.SymmetricKey{}
 		setSymmetricKey(&symmetricKey, keyFromUser, from, to)
@@ -81,9 +82,33 @@ func SendMail(from model.User, to model.User, body string, keyFromUser string, s
 		}
 		mail.Body = body
 
+		// That means there is a image to send with a secret message.
 		if !isEmpty(secretMessage) {
-			// That means there is a image to send with a secret message.
-			setImageAndSecret(&mail, secretMessage, imagePath)
+			plainImage, err := ioutil.ReadFile(imagePath)
+			if err != nil {
+				log.Fatalf("Error occur while reading image: %v", err)
+			}
+
+			if !isEmpty(watermark) {
+				watermark := bimg.Watermark{
+					Text:       watermark,
+					Opacity:    0.95,
+					Width:      200,
+					DPI:        100,
+					Margin:     150,
+					Font:       "sans bold 20",
+					Background: bimg.Color{255, 255, 255},
+				}
+
+				newImage, err := bimg.NewImage(plainImage).Watermark(watermark)
+
+				if err != nil {
+					log.Fatalf("Error occur while adding watermark to image: %v", err)
+				}
+
+				plainImage = newImage
+			}
+			setImageAndSecret(&mail, secretMessage, plainImage)
 		}
 
 		if len(from.PrivateKey) != 0 {
@@ -178,12 +203,7 @@ func GetSecretMessageFromImage(image []byte) string {
 //
 // If mail is sent, method will return true and mail that is sent.
 // If could not sent, method will return false and nil.
-func setImageAndSecret(mail *model.Mail, secretMessage string, imagePath string) {
-	plainImage, err := ioutil.ReadFile(imagePath)
-	if err != nil {
-		log.Fatalf("Error occur while reading test image: %v", err)
-	}
-
+func setImageAndSecret(mail *model.Mail, secretMessage string, plainImage []byte) {
 	secretImage := crypto.EncodeSteganography(secretMessage, plainImage)
 
 	mail.Image = secretImage

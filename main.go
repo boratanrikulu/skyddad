@@ -87,7 +87,7 @@ func main() {
 					DB.Where("username = ?", c.String("to-user")).First(&toUser)
 					if currentUser.Username != "" {
 						if toUser.Username != "" {
-							result, mail := controller.SendMail(currentUser, toUser, c.String("body"), c.String("key"), c.String("secret-message"), c.String("image-path"))
+							result, mail := controller.SendMail(currentUser, toUser, c.String("body"), c.String("key"), c.String("secret-message"), c.String("watermark"), c.String("image-path"))
 							if result {
 								fmt.Printf("------------------\n")
 								fmt.Println("(✓) Mail was sent.")
@@ -140,6 +140,11 @@ func main() {
 						Required: false,
 					},
 					&cli.StringFlag{
+						Name:     "watermark, w",
+						Usage:    "Text to add image as a watermark.",
+						Required: false,
+					},
+					&cli.StringFlag{
 						Name:     "image-path, ip",
 						Usage:    "Image path to send to the user.",
 						Required: false,
@@ -187,7 +192,7 @@ func main() {
 							}
 							for i := 0; i < count; i++ {
 								body := controller.RandomMails()
-								result, mail := controller.SendMail(currentUser, toUser, body, c.String("key"), "", "")
+								result, mail := controller.SendMail(currentUser, toUser, body, c.String("key"), "", "", "")
 								if result {
 									fmt.Printf("------------------\n")
 									fmt.Println("(✓) Mail was sent.")
