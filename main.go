@@ -242,6 +242,47 @@ func main() {
 					},
 				},
 			},
+			{
+				Name:  "set-2fa",
+				Usage: "Sets 2fa for your account.",
+				Action: func(c *cli.Context) error {
+					currentUser := controller.LogIn(c.String("username"), c.String("password"))
+					if currentUser.Username != "" {
+						// If 2fa is already active, ask for make inactive.
+						if currentUser.Is2faActive {
+							result := controller.Set2faInactive(&currentUser)
+							if result {
+								fmt.Println("2FA is inactived successfully.")
+								return nil
+							}
+							fmt.Println("Operation is canceled. Your account's 2FA is still active.")
+						} else {
+							// If 2fa is not active, ask for make active.
+							result := controller.Set2faActive(&currentUser)
+							if result {
+								fmt.Println("2FA is actived successfully.")
+								return nil
+							}
+							log.Fatal("Error occur. We can not active 2FA for your account")
+						}
+					} else {
+						fmt.Println("(!) Incorrect username or password.")
+					}
+					return nil
+				},
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:     "username, u",
+						Usage:    "Your username to use mail service.",
+						Required: true,
+					},
+					&cli.StringFlag{
+						Name:     "password, p",
+						Usage:    "Your password to use mail service.",
+						Required: true,
+					},
+				},
+			},
 		},
 	}
 
