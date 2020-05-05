@@ -34,6 +34,29 @@ func init() {
 func LogIn(username string, password string) model.User {
 	user := model.User{}
 	DB.Where("username = ? AND password = ?", username, password).First(&user)
+	if user.Username == "" {
+		// Check firstly if login is successful.
+		return user
+	}
+
+	// Checks passcode if 2FA activated.
+	if user.Is2faActive {
+		fmt.Println("2FA is activated for this account.")
+		for {
+			fmt.Printf("What is the code: ")
+			var passcode string
+			fmt.Scan(&passcode)
+			if totp.Validate(passcode, user.TotpSecret) {
+				fmt.Println("Code is valid.")
+				fmt.Println("Login is successful.")
+				fmt.Println("You are redirecting to the app.")
+				time.Sleep(2 * time.Second)
+				return user
+			}
+			fmt.Println("Code is invalid.")
+		}
+	}
+
 	return user
 }
 
@@ -66,7 +89,7 @@ func Set2faActive(user *model.User) bool {
 
 // Set2faInactive methods remove make 2FA option false for the account
 func Set2faInactive(user *model.User) bool {
-	fmt.Println("2FA is already actived for your account.")
+	fmt.Println("2FA is already activated for your account.")
 	for {
 		fmt.Printf("Do you want to inactive it? [Y/N] ")
 		var answer string

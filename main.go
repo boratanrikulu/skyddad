@@ -252,7 +252,7 @@ func main() {
 						if currentUser.Is2faActive {
 							result := controller.Set2faInactive(&currentUser)
 							if result {
-								fmt.Println("2FA is inactived successfully.")
+								fmt.Println("2FA is inactivated successfully.")
 								return nil
 							}
 							fmt.Println("Operation is canceled. Your account's 2FA is still active.")
@@ -260,7 +260,7 @@ func main() {
 							// If 2fa is not active, ask for make active.
 							result := controller.Set2faActive(&currentUser)
 							if result {
-								fmt.Println("2FA is actived successfully.")
+								fmt.Println("2FA is activated successfully.")
 								return nil
 							}
 							log.Fatal("Error occur. We can not active 2FA for your account")
