@@ -212,7 +212,8 @@ To: testing-user-2
 skyddad send-mail --to-user "testing-user-2" \
                   --body "Top secret message." \
                   --secret-message "A message to encode to image." \
-                  --image-path "/path/to/F.jpg"
+                  --image-path "/path/to/F.jpg" \
+                  --passphrase "11111111111111111111111111111111"
 ```
 
 #### Excepted result.
@@ -231,7 +232,6 @@ Password: <password>
 	Body: [ Encrypted ] 57af225317b106c0af1c5e14799ad34162dbb24fba50ff0be60d83f07ae931da040011
 	----------
 	Image: Secret image is attach to mail.
-	Image has this secret message: "A message to encode to image."
 	----------
 ------------------
 (✓) A mail was sent to "testing-user-1" from "testing-user-2".
@@ -266,8 +266,6 @@ To: testing-user-2
 	----------
 	Image: It containes an secret image.
 	Image saved at: "/path/to/secret489931897"
-	Image contains a secret message,
-	It says: "A message to encode to image."
 	----------
 ------------------
 	(✓) Message is not changed. Hash is same.
@@ -281,6 +279,20 @@ To: testing-user-2
 ------------------
 (✓) "2" mails are listed for "testing-user-2" user.
 
+```
+
+---
+
+#### Showing secret message of the secret image.
+
+```bash
+skyddad secret-image --image-path "/path/to/secret489931897"  \
+                     --passphrase "11111111111111111111111111111111"
+```
+
+#### Excepted result.
+```
+Secret message: A message to encode to image.
 ```
 
 ---
@@ -356,6 +368,6 @@ Password: <password>
 - [x] Add spam attack feature. (--spam-attack)  
 - [x] Add hash control feature for checking if message is changed.  
 - [x] Add electronic signatures for e-mails.
-- [x] Add secret image option (Steganography).
+- [x] Add secret image option. (Steganography)
 - [x] Add 2FA auth option. (TOTP)
 - [ ] Add encryption for user passwords.
