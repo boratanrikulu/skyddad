@@ -9,5 +9,6 @@ require (
 	github.com/mdp/qrterminal/v3 v3.0.0
 	github.com/pquerna/otp v1.2.0
 	github.com/urfave/cli/v2 v2.1.1
+	golang.org/x/crypto v0.0.0-20191205180655-e7c4368fe9dd
 	gopkg.in/h2non/bimg.v1 v1.0.19
 )

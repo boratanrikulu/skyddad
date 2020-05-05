@@ -42,15 +42,16 @@ NAME:
    Skyddad - A mail client that keeps you safe.
 
 USAGE:
-   skyddad [global options] command [command options] [arguments...]
+   main [global options] command [command options] [arguments...]
 
 COMMANDS:
-   mails        Show all mails that were sent by the user.
-   send-mail    Send mail to the user.
-   sign-up      Sign up to the mail service.
-   spam-attack  Attack to the user with spam mails.
-   set-2fa      Sets 2fa for your account.
-   help, h      Shows a list of commands or help for one command
+   mails         Show all mails that were sent by the user.
+   send-mail     Send mail to the user.
+   sign-up       Sign up to the mail service.
+   spam-attack   Attack to the user with spam mails.
+   set-2fa       Sets 2fa for your account.
+   secret-image  Get secret message from secret image.
+   help, h       Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
    --help, -h  show help (default: false)
@@ -60,11 +61,14 @@ GLOBAL OPTIONS:
 
 #### Creating users.
 ```bash
-skyddad sign-up --username "testing-user-1" --password "user-1-pass"
+skyddad sign-up
 ```
 
 #### Excepted result.
 ```
+Username: <username>
+Password: <password>
+
 (✓) User was created.
   Username: testing-user-1,
   Password: user-1-pass,
@@ -81,11 +85,14 @@ After activating the 2FA, the user has to enter the Passcode when he / she will 
 If the user has no access to the passcode (generator), the user can not user him / her account even the user knows the password.
 
 ```bash
-skyddad set-2fa --username "testing-user-1" --password "user-1-pass"
+skyddad set-2fa
 ```
 
 #### Execepted result.
 ```
+Username: <username>
+Password: <password>
+
 2FA will be active for your account.
 Please use this QR code to set to your Auth Client. (like authy)
 QR YOE7V6CFQTFLGNLO7TT3Z7APOUHKO4JV
@@ -125,11 +132,14 @@ There is no differences. Use same commands.
 User can disable 2FA, but that's is not recommend for the security reasons.
 
 ```bash
-skyddad set-2fa --username "testing-user-1" --password "user-1-pass"
+skyddad set-2fa
 ```
 
 #### Execepted result.
 ```
+Username: <username>
+Password: <password>
+
 2FA is activated for this account.
 What is the code: 308239
 Code is valid.
@@ -144,8 +154,7 @@ Do you want to inactive it? [Y/N] y
 
 #### Sending mails.
 ```bash
-skyddad send-mail --username "testing-user-1" --password "user-1-pass" \
-                  --to-user "testing-user-2" \
+skyddad send-mail --to-user "testing-user-2" \
                   --body "Top secret message."
 ```
 
@@ -153,6 +162,9 @@ skyddad send-mail --username "testing-user-1" --password "user-1-pass" \
 > Body section would be different.  
 
 ```
+Username: <username>
+Password: <password>
+
 ------------------
 (✓) Mail was sent.
 	----------
@@ -170,11 +182,14 @@ skyddad send-mail --username "testing-user-1" --password "user-1-pass" \
 
 #### Showing e-mails.
 ```bash
-skyddad mails --username "testing-user-2" --password "user-2-pass"
+skyddad mails
 ```
 
 #### Excepted result.
 ```
+Username: <username>
+Password: <password>
+
 ------------------
 To: testing-user-2
 	----------
@@ -194,8 +209,7 @@ To: testing-user-2
 
 #### Sending mails that contains secret images.
 ```bash
-skyddad send-mail --username "testing-user-1" --password "user-1-pass" \
-                  --to-user "testing-user-2" \
+skyddad send-mail --to-user "testing-user-2" \
                   --body "Top secret message." \
                   --secret-message "A message to encode to image." \
                   --image-path "/path/to/F.jpg"
@@ -203,6 +217,9 @@ skyddad send-mail --username "testing-user-1" --password "user-1-pass" \
 
 #### Excepted result.
 ```
+Username: <username>
+Password: <password>
+
 ------------------
 (✓) Mail was sent.
 	----------
@@ -227,11 +244,14 @@ It is same with normal mails.
 If image is attached to mail,  
 you will see the image address and the secret message.
 ```bash
-skyddad mails --username "testing-user-2" --password "user-2-pass"
+skyddad mails
 ```
 
 #### Excepted result.
 ```
+Username: <username>
+Password: <password>
+
 ------------------
 To: testing-user-2
 ------------------
@@ -267,13 +287,15 @@ To: testing-user-2
 
 #### Spam attack to the user.
 ```bash
-skyddad spam-attack --username "testing-user-1" --password "user-1-pass" \
-                    --to-user "testing-user-2" \
+skyddad spam-attack --to-user "testing-user-2" \
                     --number-of-mails "5"
 ```
 
 #### Excepted result.
 ```
+Username: <username>
+Password: <password>
+
 ------------------
 (✓) Mail was sent.
 	----------

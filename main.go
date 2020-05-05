@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/urfave/cli/v2"
+	"golang.org/x/crypto/ssh/terminal"
 
 	"github.com/boratanrikulu/skyddad/controller"
 	"github.com/boratanrikulu/skyddad/driver"
@@ -38,7 +39,8 @@ func main() {
 				Name:  "mails",
 				Usage: "Show all mails that were sent by the user.",
 				Action: func(c *cli.Context) error {
-					currentUser := controller.LogIn(c.String("username"), c.String("password"))
+					username, password := takeLoginInfo()
+					currentUser := controller.LogIn(username, password)
 					if currentUser.Username != "" {
 						fmt.Printf("------------------\n")
 						fmt.Printf("To: %v\n", currentUser.Username)
@@ -52,23 +54,13 @@ func main() {
 							showRecivedMail(&mail)
 						}
 						fmt.Printf("------------------\n")
-						fmt.Printf("(✓) \"%v\" mails are listed for \"%v\" user.\n", len(mails), c.String("username"))
+						fmt.Printf("(✓) \"%v\" mails are listed for \"%v\" user.\n", len(mails), username)
 					} else {
 						fmt.Println("(!) Incorrect username or password.")
 					}
 					return nil
 				},
 				Flags: []cli.Flag{
-					&cli.StringFlag{
-						Name:     "username, u",
-						Usage:    "Your username to use mail service.",
-						Required: true,
-					},
-					&cli.StringFlag{
-						Name:     "password, p",
-						Usage:    "Your password to use mail service.",
-						Required: true,
-					},
 					&cli.StringFlag{
 						Name:  "take, t",
 						Usage: "Mail limit to take.",
@@ -83,7 +75,8 @@ func main() {
 						log.Fatal("You need to set secret-message, passphrase and image-path both!")
 					}
 
-					currentUser := controller.LogIn(c.String("username"), c.String("password"))
+					username, password := takeLoginInfo()
+					currentUser := controller.LogIn(username, password)
 					toUser := model.User{}
 					DB.Where("username = ?", c.String("to-user")).First(&toUser)
 					if currentUser.Username != "" {
@@ -109,16 +102,6 @@ func main() {
 					return nil
 				},
 				Flags: []cli.Flag{
-					&cli.StringFlag{
-						Name:     "username, u",
-						Usage:    "Your username to use mail service.",
-						Required: true,
-					},
-					&cli.StringFlag{
-						Name:     "password, p",
-						Usage:    "Your password to use mail service.",
-						Required: true,
-					},
 					&cli.StringFlag{
 						Name:     "to-user, t",
 						Usage:    "Username to send mail.",
@@ -161,7 +144,8 @@ func main() {
 				Name:  "sign-up",
 				Usage: "Sign up to the mail service.",
 				Action: func(c *cli.Context) error {
-					result, user := controller.SingUp(c.String("username"), c.String("password"))
+					username, password := takeLoginInfo()
+					result, user := controller.SingUp(username, password)
 					if result {
 						fmt.Println("(✓) User was created.")
 						showUser(user)
@@ -170,24 +154,13 @@ func main() {
 					}
 					return nil
 				},
-				Flags: []cli.Flag{
-					&cli.StringFlag{
-						Name:     "username, u",
-						Usage:    "Your username to use mail service.",
-						Required: true,
-					},
-					&cli.StringFlag{
-						Name:     "password, p",
-						Usage:    "Your password to use mail service.",
-						Required: true,
-					},
-				},
 			},
 			{
 				Name:  "spam-attack",
 				Usage: "Attack to the user with spam mails.",
 				Action: func(c *cli.Context) error {
-					currentUser := controller.LogIn(c.String("username"), c.String("password"))
+					username, password := takeLoginInfo()
+					currentUser := controller.LogIn(username, password)
 					toUser := model.User{}
 					DB.Where("username = ?", c.String("to-user")).First(&toUser)
 					if currentUser.Username != "" {
@@ -222,16 +195,6 @@ func main() {
 				},
 				Flags: []cli.Flag{
 					&cli.StringFlag{
-						Name:     "username, u",
-						Usage:    "Your username to use mail service.",
-						Required: true,
-					},
-					&cli.StringFlag{
-						Name:     "password, p",
-						Usage:    "Your password to use mail service.",
-						Required: true,
-					},
-					&cli.StringFlag{
 						Name:     "to-user, t",
 						Usage:    "Username to send mail.",
 						Required: true,
@@ -252,7 +215,8 @@ func main() {
 				Name:  "set-2fa",
 				Usage: "Sets 2fa for your account.",
 				Action: func(c *cli.Context) error {
-					currentUser := controller.LogIn(c.String("username"), c.String("password"))
+					username, password := takeLoginInfo()
+					currentUser := controller.LogIn(username, password)
 					if currentUser.Username != "" {
 						// If 2fa is already active, ask for make inactive.
 						if currentUser.Is2faActive {
@@ -275,18 +239,6 @@ func main() {
 						fmt.Println("(!) Incorrect username or password.")
 					}
 					return nil
-				},
-				Flags: []cli.Flag{
-					&cli.StringFlag{
-						Name:     "username, u",
-						Usage:    "Your username to use mail service.",
-						Required: true,
-					},
-					&cli.StringFlag{
-						Name:     "password, p",
-						Usage:    "Your password to use mail service.",
-						Required: true,
-					},
 				},
 			},
 			{
@@ -323,6 +275,23 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func takeLoginInfo() (string, string) {
+	var username string
+	var password string
+
+	fmt.Print("Username: ")
+	fmt.Scan(&username)
+	fmt.Print("Password: ")
+	p, err := terminal.ReadPassword(0)
+	if err != nil {
+		log.Fatal(err)
+	}
+	password = string(p)
+	fmt.Println("")
+
+	return username, password
 }
 
 func setEncryptionInfo(mail *model.Mail, info string) {
@@ -399,7 +368,7 @@ func showSendMail(mail *model.Mail) {
 
 	if mail.IsContainImage {
 		fmt.Println("\t----------")
-		fmt.Println("\tImage: Secret image is attach to mail.")
+		fmt.Println("\tImage: Secret image is attached to mail.")
 		fmt.Println("\t----------")
 	}
 }
