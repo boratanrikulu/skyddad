@@ -7,11 +7,13 @@ import (
 // User model.
 type User struct {
 	gorm.Model
-	Username   string `gorm:"unique;unique_index;not null"`
-	Password   string `gorm:"not null"`
-	Mails      []Mail `gorm:"foreignkey:ToRefer;association_foreignkey:ID"`
-	PublicKey  []byte
-	PrivateKey []byte
+	Username    string `gorm:"unique;unique_index;not null"`
+	Password    string `gorm:"not null"`
+	Mails       []Mail `gorm:"foreignkey:ToRefer;association_foreignkey:ID"`
+	PublicKey   []byte
+	PrivateKey  []byte
+	TotpSecret  string
+	Is2faActive bool
 }
 
 // Mail model.

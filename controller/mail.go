@@ -13,6 +13,8 @@ import (
 	"time"
 
 	"github.com/jinzhu/gorm"
+	"github.com/mdp/qrterminal/v3"
+	"github.com/pquerna/otp/totp"
 	bimg "gopkg.in/h2non/bimg.v1"
 
 	"github.com/boratanrikulu/skyddad/crypto"
@@ -33,7 +35,78 @@ func init() {
 func LogIn(username string, password string) model.User {
 	user := model.User{}
 	DB.Where("username = ? AND password = ?", username, password).First(&user)
+	if user.Username == "" {
+		// Check firstly if login is successful.
+		return user
+	}
+
+	// Checks passcode if 2FA activated.
+	if user.Is2faActive {
+		fmt.Println("2FA is activated for this account.")
+		for {
+			fmt.Printf("What is the code: ")
+			var passcode string
+			fmt.Scan(&passcode)
+			if totp.Validate(passcode, user.TotpSecret) {
+				fmt.Println("Code is valid.")
+				fmt.Println("Login is successful.")
+				fmt.Println("You are redirecting to the app.")
+				time.Sleep(2 * time.Second)
+				return user
+			}
+			fmt.Println("Code is invalid.")
+		}
+	}
+
 	return user
+}
+
+// Set2faInactive methods remove make 2FA option true for the account
+func Set2faActive(user *model.User) bool {
+	options := totp.GenerateOpts{
+		Issuer:      "Skyddad",
+		AccountName: user.Username,
+	}
+
+	key, _ := totp.Generate(options)
+	fmt.Println("2FA will be active for your account.")
+	fmt.Println("Please use this QR code to set to your Auth Client. (like authy)")
+	fmt.Println("QR", key.Secret())
+	qrterminal.GenerateHalfBlock(key.String(), qrterminal.L, os.Stdout)
+	for {
+		fmt.Printf("CODE: ")
+		var passcode string
+		fmt.Scan(&passcode)
+		if totp.Validate(passcode, key.Secret()) {
+			user.TotpSecret = key.Secret()
+			user.Is2faActive = true
+			DB.Save(user)
+			return true
+		}
+		fmt.Println("Code is invalid.")
+	}
+	return false
+}
+
+// Set2faInactive methods remove make 2FA option false for the account
+func Set2faInactive(user *model.User) bool {
+	fmt.Println("2FA is already activated for your account.")
+	for {
+		fmt.Printf("Do you want to inactive it? [Y/N] ")
+		var answer string
+		fmt.Scan(&answer)
+		switch answer {
+		case "y", "Y":
+			user.TotpSecret = ""
+			user.Is2faActive = false
+			DB.Save(user)
+			return true
+		case "n", "N":
+			return false
+		default:
+			fmt.Println("(!) Please use only Y or N")
+		}
+	}
 }
 
 // SingUp creates user if there is not already.
