@@ -9,7 +9,8 @@ This program was written for Cryptology lesson that's given at Pamukkale Univers
 - All mails are encrypted by using [**Stream Cipher Algorithm (CFB)**](https://golang.org/pkg/crypto/cipher/#Stream).  
 - You can simply see if mails are changed. Mail hashes are calculated by using SHA-256 algorithm [**crypto/sha256**](https://golang.org/pkg/crypto/sha256).
 - Mails are signed by using [**ED25519 Algorithm**](https://golang.org/pkg/crypto/ed25519/). That is an automatic operation. When you signup to system, private and public keys are created. When you send a mail, the mail will be signed by using your private key. Users checks received email's signatures by checking from-user's public key.
-- It support sending secret images (Steganography). It use [**auyer/steganography**](https://github.com/auyer/steganography) library.
+- It supports sending secret images (Steganography). It use [**auyer/steganography**](https://github.com/auyer/steganography) library.
+- It supports 2FA (TOTP). It use [**pquerna/otp**](https://github.com/pquerna/otp) library.
 
 ## Installation
 
@@ -48,6 +49,7 @@ COMMANDS:
    send-mail    Send mail to the user.
    sign-up      Sign up to the mail service.
    spam-attack  Attack to the user with spam mails.
+   set-2fa      Sets 2fa for your account.
    help, h      Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
@@ -66,6 +68,76 @@ skyddad sign-up --username "testing-user-1" --password "user-1-pass"
 (✓) User was created.
   Username: testing-user-1,
   Password: user-1-pass,
+```
+
+---
+
+#### Setting 2FA ON for the users.
+As default 2FA is disable for the account. Users have to enable by running this command.  
+This command will generate a QR.  
+User needs to use an auth app like Google Authenticator to generate passcodes.
+
+After activating the 2FA, the user has to enter the Passcode when he / she will take action for him / her account.  
+If the user has no access to the passcode (generator), the user can not user him / her account even the user knows the password.
+
+```bash
+skyddad set-2fa --username "testing-user-1" --password "user-1-pass"
+```
+
+#### Execepted result.
+```
+2FA will be active for your account.
+Please use this QR code to set to your Auth Client. (like authy)
+QR YOE7V6CFQTFLGNLO7TT3Z7APOUHKO4JV
+█████████████████████████████████████████████████
+█████████████████████████████████████████████████
+████ ▄▄▄▄▄ ██   ▄█▀ ██▀▀▀   ▀▄  ▀▀▄ ▀█ ▄▄▄▄▄ ████
+████ █   █ █▄ █▄█▀▄▀▀▀▀█▀▀ ▄█▀▀█▄█▄█ █ █   █ ████
+████ █▄▄▄█ ██ ▀▄▄█▄▀██▄ ▄▀▄▀█▄ ▀▀▀   █ █▄▄▄█ ████
+████▄▄▄▄▄▄▄█ ▀▄█▄▀ █▄▀ █▄▀ █ ▀▄▀▄▀▄█▄█▄▄▄▄▄▄▄████
+████▄▄▄█  ▄  ▄  █▄ ▄▀▀█▄█ ███ █▄  ██▀▄ ██▀▄▀▀████
+█████▀▀█▀█▄▄▀▄  ▀▄█▀█▀ ▀▀ ▀█▄▀▀▀  ███▀▄▄▀█▄▄ ████
+████▄▀▄▀█▄▄██ ▄▀███  █▀ ▀██▀   ▀▀ ▀▄█  ▄█▀▀█ ████
+████▄▄ ▀▄ ▄ ▄▄ ▀█▀▀▀ ▀▄██▀█▀  ▀▀▀▀█▀▀ ▄██▄█ ▄████
+████▄ ▄███▄▀ ▀ █   █ ▀██ ▄███ ▄▄▀ █▄   ▀█ █▄▄████
+████▄▄▄▄▄▄▄▀▄ ▄▀▀▀ █▀▀▄▀▄ █▀▀ ▀██  ██▄▄▄▀▄▄▄▄████
+███████▄ ▀▄ ▄▀▀▀ ▀ ██▀█▄█▀█ ▀█▀██ ███▄ ▀█ ▀▄▀████
+█████▄█▀▄█▄█ █ ▄  ██▀▀ ▀  ▀▀█▀▀▀ ▀ ▀ ▄▀█▄▄▄▄ ████
+████▄    ▀▄▄ ▀ ▄▀▄▄▄ ▄ █ ▄██▄ ▀█▀ █▀▀▄ ▀███▄▀████
+████▄▀▀██ ▄█ █ ██▄█▀█ ▀▀ ▀██▄ █▀▀▀▀█▀▀ ▀▀▄▄▀ ████
+█████▄▀ █ ▄██ ▀▀█▀█  ▀▀▀▀██▀▀  █▀ █▄   ██▄█▀ ████
+████▄▀▀▀ █▄▄▀██▀█ ███▀ ▀  ▀█ ▀▀▀▀▀██▀ ▄ ▄█▄  ████
+████▄█▄▄█▄▄█ █▄█▀ █▄  ▄█▀▄▀█▀ ▀█     ▄▄▄ ██▄▀████
+████ ▄▄▄▄▄ █ █▀██▀ ▀ ▀▀▀█ ▀▀▀ █▀     █▄█ █▄▄▄████
+████ █   █ █▄█ ▀ █ ▀ ▀█ ▀  ▀ ▀██ ▄▀▀▄▄▄▄ ██▄ ████
+████ █▄▄▄█ █  █▄ ▀ ▀▄ ██▀ ▄██  █▄ ▄▀  ▀▀▄█▄ ▄████
+████▄▄▄▄▄▄▄█▄██▄█▄█▄▄▄██▄▄██▄▄███▄█▄▄▄▄████▄▄████
+█████████████████████████████████████████████████
+▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+CODE: 566156
+2FA is activated successfully.
+```
+
+---
+
+#### Setting 2FA OFF for the users.
+There is no differences. Use same commands.  
+User can disable 2FA, but that's is not recommend for the security reasons.
+
+```bash
+skyddad set-2fa --username "testing-user-1" --password "user-1-pass"
+```
+
+#### Execepted result.
+```
+2FA is activated for this account.
+What is the code: 308239
+Code is valid.
+Login is successful.
+You are redirecting to the app.
+2FA is already activated for your account.
+Do you want to inactive it? [Y/N] y
+2FA is inactivated successfully.
 ```
 
 ---
@@ -263,4 +335,5 @@ skyddad spam-attack --username "testing-user-1" --password "user-1-pass" \
 - [x] Add hash control feature for checking if message is changed.  
 - [x] Add electronic signatures for e-mails.
 - [x] Add secret image option (Steganography).
+- [x] Add 2FA auth option. (TOTP)
 - [ ] Add encryption for user passwords.
