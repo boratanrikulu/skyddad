@@ -290,8 +290,8 @@ func main() {
 				},
 			},
 			{
-				Name:  "secret-message",
-				Usage: "Sets 2fa for your account.",
+				Name:  "secret-image",
+				Usage: "Get secret message from secret image.",
 				Action: func(c *cli.Context) error {
 					imagePath := c.String("image-path")
 					passphrase := c.String("passphrase")
