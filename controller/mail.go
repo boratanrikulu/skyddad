@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/jinzhu/gorm"
+	"github.com/mdp/qrterminal/v3"
 	"github.com/pquerna/otp/totp"
 	bimg "gopkg.in/h2non/bimg.v1"
 
@@ -71,7 +72,7 @@ func Set2faActive(user *model.User) bool {
 	fmt.Println("2FA will be active for your account.")
 	fmt.Println("Please use this QR code to set to your Auth Client. (like authy)")
 	fmt.Println("QR", key.Secret())
-	// TODO add qr image.
+	qrterminal.GenerateHalfBlock(key.String(), qrterminal.L, os.Stdout)
 	for {
 		fmt.Printf("CODE: ")
 		var passcode string
