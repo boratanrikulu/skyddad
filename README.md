@@ -9,6 +9,8 @@ This program was written for Cryptology lesson that's given at Pamukkale Univers
 - All mails are encrypted by using [**Stream Cipher Algorithm (CFB)**](https://golang.org/pkg/crypto/cipher/#Stream).  
 - You can simply see if mails are changed. Mail hashes are calculated by using SHA-256 algorithm [**crypto/sha256**](https://golang.org/pkg/crypto/sha256).
 - Mails are signed by using [**ED25519 Algorithm**](https://golang.org/pkg/crypto/ed25519/). That is an automatic operation. When you signup to system, private and public keys are created. When you send a mail, the mail will be signed by using your private key. Users checks received email's signatures by checking from-user's public key.
+- It supports sending secret images (Steganography). It use [**auyer/steganography**](https://github.com/auyer/steganography) library.
+- It supports 2FA (TOTP). It use [**pquerna/otp**](https://github.com/pquerna/otp) library.
 
 ## Installation
 
@@ -40,14 +42,16 @@ NAME:
    Skyddad - A mail client that keeps you safe.
 
 USAGE:
-   skyddad [global options] command [command options] [arguments...]
+   main [global options] command [command options] [arguments...]
 
 COMMANDS:
-   mails        Show all mails that were sent by the user.
-   send-mail    Send mail to the user.
-   sign-up      Sign up to the mail service.
-   spam-attack  Attack to the user with spam mails.
-   help, h      Shows a list of commands or help for one command
+   mails         Show all mails that were sent by the user.
+   send-mail     Send mail to the user.
+   sign-up       Sign up to the mail service.
+   spam-attack   Attack to the user with spam mails.
+   set-2fa       Sets 2fa for your account.
+   secret-image  Get secret message from secret image.
+   help, h       Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
    --help, -h  show help (default: false)
@@ -57,11 +61,14 @@ GLOBAL OPTIONS:
 
 #### Creating users.
 ```bash
-skyddad sign-up --username "testing-user-1" --password "user-1-pass"
+skyddad sign-up
 ```
 
 #### Excepted result.
 ```
+Username: <username>
+Password: <password>
+
 (✓) User was created.
   Username: testing-user-1,
   Password: user-1-pass,
@@ -69,10 +76,85 @@ skyddad sign-up --username "testing-user-1" --password "user-1-pass"
 
 ---
 
+#### Setting 2FA ON for the users.
+As default 2FA is disable for the account. Users have to enable by running this command.  
+This command will generate a QR.  
+User needs to use an auth app like Google Authenticator to generate passcodes.
+
+After activating the 2FA, the user has to enter the Passcode when he / she will take action for him / her account.  
+If the user has no access to the passcode (generator), the user can not user him / her account even the user knows the password.
+
+```bash
+skyddad set-2fa
+```
+
+#### Execepted result.
+```
+Username: <username>
+Password: <password>
+
+2FA will be active for your account.
+Please use this QR code to set to your Auth Client. (like authy)
+QR YOE7V6CFQTFLGNLO7TT3Z7APOUHKO4JV
+█████████████████████████████████████████████████
+█████████████████████████████████████████████████
+████ ▄▄▄▄▄ ██   ▄█▀ ██▀▀▀   ▀▄  ▀▀▄ ▀█ ▄▄▄▄▄ ████
+████ █   █ █▄ █▄█▀▄▀▀▀▀█▀▀ ▄█▀▀█▄█▄█ █ █   █ ████
+████ █▄▄▄█ ██ ▀▄▄█▄▀██▄ ▄▀▄▀█▄ ▀▀▀   █ █▄▄▄█ ████
+████▄▄▄▄▄▄▄█ ▀▄█▄▀ █▄▀ █▄▀ █ ▀▄▀▄▀▄█▄█▄▄▄▄▄▄▄████
+████▄▄▄█  ▄  ▄  █▄ ▄▀▀█▄█ ███ █▄  ██▀▄ ██▀▄▀▀████
+█████▀▀█▀█▄▄▀▄  ▀▄█▀█▀ ▀▀ ▀█▄▀▀▀  ███▀▄▄▀█▄▄ ████
+████▄▀▄▀█▄▄██ ▄▀███  █▀ ▀██▀   ▀▀ ▀▄█  ▄█▀▀█ ████
+████▄▄ ▀▄ ▄ ▄▄ ▀█▀▀▀ ▀▄██▀█▀  ▀▀▀▀█▀▀ ▄██▄█ ▄████
+████▄ ▄███▄▀ ▀ █   █ ▀██ ▄███ ▄▄▀ █▄   ▀█ █▄▄████
+████▄▄▄▄▄▄▄▀▄ ▄▀▀▀ █▀▀▄▀▄ █▀▀ ▀██  ██▄▄▄▀▄▄▄▄████
+███████▄ ▀▄ ▄▀▀▀ ▀ ██▀█▄█▀█ ▀█▀██ ███▄ ▀█ ▀▄▀████
+█████▄█▀▄█▄█ █ ▄  ██▀▀ ▀  ▀▀█▀▀▀ ▀ ▀ ▄▀█▄▄▄▄ ████
+████▄    ▀▄▄ ▀ ▄▀▄▄▄ ▄ █ ▄██▄ ▀█▀ █▀▀▄ ▀███▄▀████
+████▄▀▀██ ▄█ █ ██▄█▀█ ▀▀ ▀██▄ █▀▀▀▀█▀▀ ▀▀▄▄▀ ████
+█████▄▀ █ ▄██ ▀▀█▀█  ▀▀▀▀██▀▀  █▀ █▄   ██▄█▀ ████
+████▄▀▀▀ █▄▄▀██▀█ ███▀ ▀  ▀█ ▀▀▀▀▀██▀ ▄ ▄█▄  ████
+████▄█▄▄█▄▄█ █▄█▀ █▄  ▄█▀▄▀█▀ ▀█     ▄▄▄ ██▄▀████
+████ ▄▄▄▄▄ █ █▀██▀ ▀ ▀▀▀█ ▀▀▀ █▀     █▄█ █▄▄▄████
+████ █   █ █▄█ ▀ █ ▀ ▀█ ▀  ▀ ▀██ ▄▀▀▄▄▄▄ ██▄ ████
+████ █▄▄▄█ █  █▄ ▀ ▀▄ ██▀ ▄██  █▄ ▄▀  ▀▀▄█▄ ▄████
+████▄▄▄▄▄▄▄█▄██▄█▄█▄▄▄██▄▄██▄▄███▄█▄▄▄▄████▄▄████
+█████████████████████████████████████████████████
+▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+CODE: 566156
+2FA is activated successfully.
+```
+
+---
+
+#### Setting 2FA OFF for the users.
+There is no differences. Use same commands.  
+User can disable 2FA, but that's is not recommend for the security reasons.
+
+```bash
+skyddad set-2fa
+```
+
+#### Execepted result.
+```
+Username: <username>
+Password: <password>
+
+2FA is activated for this account.
+What is the code: 308239
+Code is valid.
+Login is successful.
+You are redirecting to the app.
+2FA is already activated for your account.
+Do you want to inactive it? [Y/N] y
+2FA is inactivated successfully.
+```
+
+---
+
 #### Sending mails.
 ```bash
-skyddad send-mail --username "testing-user-1" --password "user-1-pass" \
-                  --to-user "testing-user-2" \
+skyddad send-mail --to-user "testing-user-2" \
                   --body "Top secret message."
 ```
 
@@ -80,6 +162,9 @@ skyddad send-mail --username "testing-user-1" --password "user-1-pass" \
 > Body section would be different.  
 
 ```
+Username: <username>
+Password: <password>
+
 ------------------
 (✓) Mail was sent.
 	----------
@@ -97,11 +182,14 @@ skyddad send-mail --username "testing-user-1" --password "user-1-pass" \
 
 #### Showing e-mails.
 ```bash
-skyddad mails --username "testing-user-2" --password "user-2-pass"
+skyddad mails
 ```
 
 #### Excepted result.
 ```
+Username: <username>
+Password: <password>
+
 ------------------
 To: testing-user-2
 	----------
@@ -119,15 +207,107 @@ To: testing-user-2
 
 ---
 
+#### Sending mails that contains secret images.
+```bash
+skyddad send-mail --to-user "testing-user-2" \
+                  --body "Top secret message." \
+                  --secret-message "A message to encode to image." \
+                  --image-path "/path/to/F.jpg" \
+                  --passphrase "11111111111111111111111111111111"
+```
+
+#### Excepted result.
+```
+Username: <username>
+Password: <password>
+
+------------------
+(✓) Mail was sent.
+	----------
+	From: testing-user-1,
+	To: testing-user-2
+	Date: 2020-05-03 03:29:09.338050197 +0300 +03 m=+6.320650255,
+	Hash: f1b8a5f9377b8b77a21eb61234383d5c071aca09cdd20bacbd88dafeef6bf3a4
+	Signature: 0f3137f99bb5dee5964771cbc7e69173e7a287f2ecc6f0aa061988c0d669095a4299cd8cc8b90d4689ae20eab10d68a6f14da6fd1fd57f29ac49b9b60e82480d
+	Body: [ Encrypted ] 57af225317b106c0af1c5e14799ad34162dbb24fba50ff0be60d83f07ae931da040011
+	----------
+	Image: Secret image is attach to mail.
+	----------
+------------------
+(✓) A mail was sent to "testing-user-1" from "testing-user-2".
+```
+
+---
+
+#### Showing mails that contains secret images.
+It is same with normal mails.  
+If image is attached to mail,  
+you will see the image address and the secret message.
+```bash
+skyddad mails
+```
+
+#### Excepted result.
+```
+Username: <username>
+Password: <password>
+
+------------------
+To: testing-user-2
+------------------
+	(✓) Message is not changed. Hash is same.
+	(✓) Message is signed by testing-user-1. That's an real signature.
+	From: testing-user-1,
+	To: testing-user-2
+	Date: 2020-05-03 03:32:37.894067 +0300 +03,
+	Hash: f1b8a5f9377b8b77a21eb61234383d5c071aca09cdd20bacbd88dafeef6bf3a4
+	Signature: 0f3137f99bb5dee5964771cbc7e69173e7a287f2ecc6f0aa061988c0d669095a4299cd8cc8b90d4689ae20eab10d68a6f14da6fd1fd57f29ac49b9b60e82480d
+	Body: [ Decrypted ] Top secret message.
+	----------
+	Image: It containes an secret image.
+	Image saved at: "/path/to/secret489931897"
+	----------
+------------------
+	(✓) Message is not changed. Hash is same.
+	(✓) Message is signed by testing-user-1. That's an real signature.
+	From: testing-user-1,
+	To: testing-user-2
+	Date: 2020-05-03 03:32:27.952383 +0300 +03,
+	Hash: f1b8a5f9377b8b77a21eb61234383d5c071aca09cdd20bacbd88dafeef6bf3a4
+	Signature: 0f3137f99bb5dee5964771cbc7e69173e7a287f2ecc6f0aa061988c0d669095a4299cd8cc8b90d4689ae20eab10d68a6f14da6fd1fd57f29ac49b9b60e82480d
+	Body: [ Decrypted ] Top secret message.
+------------------
+(✓) "2" mails are listed for "testing-user-2" user.
+
+```
+
+---
+
+#### Showing secret message of the secret image.
+
+```bash
+skyddad secret-image --image-path "/path/to/secret489931897"  \
+                     --passphrase "11111111111111111111111111111111"
+```
+
+#### Excepted result.
+```
+Secret message: A message to encode to image.
+```
+
+---
+
 #### Spam attack to the user.
 ```bash
-skyddad spam-attack --username "testing-user-1" --password "user-1-pass" \
-                    --to-user "testing-user-2" \
+skyddad spam-attack --to-user "testing-user-2" \
                     --number-of-mails "5"
 ```
 
 #### Excepted result.
 ```
+Username: <username>
+Password: <password>
+
 ------------------
 (✓) Mail was sent.
 	----------
@@ -188,4 +368,6 @@ skyddad spam-attack --username "testing-user-1" --password "user-1-pass" \
 - [x] Add spam attack feature. (--spam-attack)  
 - [x] Add hash control feature for checking if message is changed.  
 - [x] Add electronic signatures for e-mails.
+- [x] Add secret image option. (Steganography)
+- [x] Add 2FA auth option. (TOTP)
 - [ ] Add encryption for user passwords.

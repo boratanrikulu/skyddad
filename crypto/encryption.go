@@ -9,7 +9,7 @@ import (
 	"log"
 )
 
-// Encrypts body that is send, by using keya.
+// Encrypt method encrypts body that is send, by using keya.
 // It use Stream Cipher Algorithm (CFB).
 func Encrypt(body string, keya string) string {
 	// TO DO: change the key value.
@@ -21,7 +21,7 @@ func Encrypt(body string, keya string) string {
 	// Create aes cipher by using key.
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		panic(err)
+		log.Fatalf("The key should be 16 bytes (AES-128) or 32 bytes (AES-256).\nErr: %v", err)
 	}
 
 	// The IV needs to be unique, but not secure. Therefore it's common to
@@ -39,7 +39,7 @@ func Encrypt(body string, keya string) string {
 	return hex.EncodeToString(ciphertext)
 }
 
-// Decrypts body that is send, by using keya.
+// Decrypt method decrypts body that is send, by using keya.
 // It use Stream Cipher Algorithm (CFB).
 func Decrypt(encryptedBody, keya string) string {
 	// Load your secret key from a safe place and reuse it across multiple
@@ -51,14 +51,13 @@ func Decrypt(encryptedBody, keya string) string {
 
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		panic(err)
+		log.Fatalf("The key should be 16 bytes (AES-128) or 32 bytes (AES-256).\nErr: %v", err)
 	}
 
 	// The IV needs to be unique, but not secure. Therefore it's common to
 	// include it at the beginning of the ciphertext.
 	if len(ciphertext) < aes.BlockSize {
 		log.Fatal("ciphertext too short")
-		return encryptedBody
 	}
 	iv := ciphertext[:aes.BlockSize]
 	ciphertext = ciphertext[aes.BlockSize:]
