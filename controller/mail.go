@@ -132,7 +132,7 @@ func SingUp(username string, password string) (bool, model.User) {
 //
 // If mail is sent, method will return true and mail that is sent.
 // If could not sent, method will return false and nil.
-func SendMail(from model.User, to model.User, body string, keyFromUser string, secretMessage string, watermark string, imagePath string) (bool, model.Mail) {
+func SendMail(from model.User, to model.User, body string, keyFromUser string, secretMessage string, passphrase string, watermark string, imagePath string) (bool, model.Mail) {
 	if len(keyFromUser) == 0 || len(keyFromUser) == 32 || len(keyFromUser) == 64 {
 		symmetricKey := model.SymmetricKey{}
 		setSymmetricKey(&symmetricKey, keyFromUser, from, to)
@@ -181,7 +181,8 @@ func SendMail(from model.User, to model.User, body string, keyFromUser string, s
 
 				plainImage = newImage
 			}
-			setImageAndSecret(&mail, secretMessage, plainImage)
+			encrypttedSecretMessage := crypto.Encrypt(secretMessage, passphrase)
+			setImageAndSecret(&mail, encrypttedSecretMessage, plainImage)
 		}
 
 		if len(from.PrivateKey) != 0 {
@@ -264,9 +265,10 @@ func CreateTempFile(image []byte) *os.File {
 }
 
 // GetSecretMessageFromImage gets secret from image by using DecodeSteganography method.
-func GetSecretMessageFromImage(image []byte) string {
+func GetSecretMessageFromImage(image []byte, passphrase string) string {
 	secret := crypto.DecodeSteganography(image)
-	return secret
+	plain := crypto.Decrypt(secret, passphrase)
+	return plain
 }
 
 // Private methods

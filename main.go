@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -78,8 +79,8 @@ func main() {
 				Name:  "send-mail",
 				Usage: "Send mail to the user.",
 				Action: func(c *cli.Context) error {
-					if isEmpty(c.String("secret-message")) != isEmpty(c.String("image-path")) {
-						log.Fatal("You need to set secret-message and image-path both!")
+					if isEmpty(c.String("secret-message")) != isEmpty(c.String("image-path")) || isEmpty(c.String("secret-message")) != isEmpty(c.String("passphrase")) {
+						log.Fatal("You need to set secret-message, passphrase and image-path both!")
 					}
 
 					currentUser := controller.LogIn(c.String("username"), c.String("password"))
@@ -87,7 +88,7 @@ func main() {
 					DB.Where("username = ?", c.String("to-user")).First(&toUser)
 					if currentUser.Username != "" {
 						if toUser.Username != "" {
-							result, mail := controller.SendMail(currentUser, toUser, c.String("body"), c.String("key"), c.String("secret-message"), c.String("watermark"), c.String("image-path"))
+							result, mail := controller.SendMail(currentUser, toUser, c.String("body"), c.String("key"), c.String("secret-message"), c.String("passphrase"), c.String("watermark"), c.String("image-path"))
 							if result {
 								fmt.Printf("------------------\n")
 								fmt.Println("(✓) Mail was sent.")
@@ -137,6 +138,11 @@ func main() {
 					&cli.StringFlag{
 						Name:     "secret-message, sm",
 						Usage:    "Secret message to encode into the image.",
+						Required: false,
+					},
+					&cli.StringFlag{
+						Name:     "passphrase, pp",
+						Usage:    "Passphrase to decode the secret message.",
 						Required: false,
 					},
 					&cli.StringFlag{
@@ -192,7 +198,7 @@ func main() {
 							}
 							for i := 0; i < count; i++ {
 								body := controller.RandomMails()
-								result, mail := controller.SendMail(currentUser, toUser, body, c.String("key"), "", "", "")
+								result, mail := controller.SendMail(currentUser, toUser, body, c.String("key"), "", "", "", "")
 								if result {
 									fmt.Printf("------------------\n")
 									fmt.Println("(✓) Mail was sent.")
@@ -283,6 +289,33 @@ func main() {
 					},
 				},
 			},
+			{
+				Name:  "secret-message",
+				Usage: "Sets 2fa for your account.",
+				Action: func(c *cli.Context) error {
+					imagePath := c.String("image-path")
+					passphrase := c.String("passphrase")
+					secretImage, err := ioutil.ReadFile(imagePath)
+					if err != nil {
+						log.Fatalf("Error occur while reading image: %v", err)
+					}
+					secretMessage := controller.GetSecretMessageFromImage(secretImage, passphrase)
+					fmt.Printf("Secret message: %v\n", secretMessage)
+					return nil
+				},
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:     "image-path, i",
+						Usage:    "Image path to decode secret message.",
+						Required: true,
+					},
+					&cli.StringFlag{
+						Name:     "passphrase, p",
+						Usage:    "Passphrase to read the secret message.",
+						Required: true,
+					},
+				},
+			},
 		},
 	}
 
@@ -340,14 +373,11 @@ func showRecivedMail(mail *model.Mail) {
 
 	if mail.IsContainImage {
 		file := controller.CreateTempFile(mail.Image)
-		secretMessage := controller.GetSecretMessageFromImage(mail.Image)
 		path, err := filepath.Abs(file.Name())
 		if err == nil {
 			fmt.Println("\t----------")
 			fmt.Println("\tImage: It containes an secret image.")
 			fmt.Printf("\tImage saved at: \"%v\"\n", path)
-			fmt.Printf("\tImage contains a secret message,\n")
-			fmt.Printf("\tIt says: \"%v\"\n", secretMessage)
 			fmt.Println("\t----------")
 		}
 	}
@@ -368,10 +398,8 @@ func showSendMail(mail *model.Mail) {
 		mail.Body)
 
 	if mail.IsContainImage {
-		secretMessage := controller.GetSecretMessageFromImage(mail.Image)
 		fmt.Println("\t----------")
 		fmt.Println("\tImage: Secret image is attach to mail.")
-		fmt.Printf("\tImage has this secret message: \"%v\"\n", secretMessage)
 		fmt.Println("\t----------")
 	}
 }
